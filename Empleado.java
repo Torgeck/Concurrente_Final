@@ -1,11 +1,16 @@
+import java.util.Random;
+
 public class Empleado implements Runnable {
 
     private static int ID = 0;
     private int idEmpleado;
-    private PuestoAtencion atencion;
+    private PuestoAtencion puesto;
+    private Random random;
 
-    public Empleado(PuestoAtencion atencion) {
+    public Empleado(PuestoAtencion puesto) {
         this.idEmpleado = generarID();
+        this.puesto = puesto;
+        this.random = new Random();
     }
 
     private int generarID() {
@@ -17,8 +22,21 @@ public class Empleado implements Runnable {
         return idEmpleado;
     }
 
-    public PuestoAtencion getAtencion() {
-        return atencion;
+    public void run() {
+
+        System.out.println("Empleado " + this.idEmpleado + " se dirige al puesto " + puesto.getIdPuesto());
+        // TODO Cambiar condicion para utilizar horarios
+        while (true) {
+            puesto.atenderPasajero();
+            // Aca lo atiende
+            try {
+                Thread.sleep(random.nextInt(8) * 1000);
+            } catch (Exception e) {
+                System.out.println("ERROR exploto el empleado [" + this.idEmpleado + "]");
+            }
+
+            puesto.liberarPasajero();
+        }
     }
 
 }
