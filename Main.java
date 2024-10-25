@@ -1,4 +1,10 @@
 import java.util.Random;
+
+import hilos.Empleado;
+import hilos.Pasajero;
+import pasivos.Aeropuerto;
+import pasivos.PuestoAtencion;
+
 import java.util.HashMap;
 
 public class Main {
