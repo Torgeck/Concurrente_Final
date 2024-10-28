@@ -1,10 +1,10 @@
 package pasivos;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
-
+import estructuras.lineales.Lista;
 import hilos.Guardia;
-import hilos.Pasajero;
 import hilos.Reloj;
 
 public class Aeropuerto {
@@ -15,16 +15,18 @@ public class Aeropuerto {
     private Hall hall;
     private Guardia guardia;
     private HashMap<Character, Terminal> hashTerminal;
-    // private Colectivo cole;
+    private HashMap<String, Lista> hashVuelos;
+    private static final char[] arregloTerminales = { 'A', 'B', 'C' };
 
-    public Aeropuerto(int cantPuestos, int capacidadMax) {
+    public Aeropuerto(List<String> empresas, int capacidadMax) {
         // generar aeropuerto
         this.hashPuestoAtencion = new HashMap<>();
         this.puestoInformes = new PuestoInformes(hashPuestoAtencion);
         this.hall = new Hall(this);
         this.guardia = new Guardia(this);
         this.hashTerminal = new HashMap<>();
-        generarPuestosAtencion(cantPuestos, capacidadMax);
+        inicializarHashVuelos(empresas);
+        generarPuestosAtencion(empresas, capacidadMax);
         generarTerminales();
     }
 
@@ -48,11 +50,19 @@ public class Aeropuerto {
         return guardia;
     }
 
-    public void generarPuestosAtencion(int cantPuestos, int capacidadMax) {
+    public HashMap<Character, Terminal> getHashTerminal() {
+        return hashTerminal;
+    }
+
+    public HashMap<String, Lista> getHashVuelos() {
+        return hashVuelos;
+    }
+
+    public void generarPuestosAtencion(List<String> empresas, int capacidadMax) {
         PuestoAtencion puesto;
-        for (int i = 0; i < cantPuestos; i++) {
-            puesto = new PuestoAtencion(this, capacidadMax, this.guardia.getWalkie());
-            this.hashPuestoAtencion.put("Empresa[" + i + "]", puesto);
+        for (int i = 0; i < empresas.size(); i++) {
+            puesto = new PuestoAtencion(this, empresas.get(i), capacidadMax, this.guardia.getWalkie());
+            this.hashPuestoAtencion.put(empresas.get(i), puesto);
         }
     }
 
@@ -62,13 +72,20 @@ public class Aeropuerto {
         hashTerminal.put('C', new Terminal(this, 'C', 16, 20));
     }
 
-    private void generarPasajero() {
+    private void inicializarHashVuelos(List<String> listaEmpresas) {
+        for (String empresa : listaEmpresas) {
+            hashVuelos.put(empresa, new Lista());
+        }
+    }
+
+    public boolean agregarVuelo(Vuelo vuelo) {
+        Lista lista = hashVuelos.get(vuelo.getAerolinea());
+        return lista.esVacia() ? false : lista.insertarInicio(vuelo);
+    }
+
+    public Terminal getTerminalRandom() {
         Random rand = new Random();
-        new Thread(new Pasajero(this, "Empresa[" + rand.nextInt(hashPuestoAtencion.size()) + "]")).start();
+        Terminal terminal = hashTerminal.get(arregloTerminales[rand.nextInt(3)]);
+        return terminal;
     }
-
-    public Terminal obtenerTerminalRandom() {
-        
-    }
-
 }
