@@ -35,8 +35,7 @@ public class Tren {
         this.barreraEmbarque = new CyclicBarrier(capacidad);
     }
 
-    // Metodos Pasajero
-    public synchronized void ocuparLugar(char terminal) {
+    private synchronized void ocuparLugar(char terminal) {
         // Ocupa lugar en su grupo
         int indice = getIndiceTerminal(terminal);
         this.capacidadActual++;
@@ -90,7 +89,7 @@ public class Tren {
 
             // Se baja en su terminal
             latchDesembarque.countDown();
-            System.out.println("Pasajero " + idPasajero + " bajo del tren en terminal: " + terminal);
+            System.out.println("Pasajero " + idPasajero + " bajo del tren en terminal: " + terminalActual);
         } catch (Exception e) {
             System.out.println("ERROR con pasajero al querer bajar al tren");
         } finally {
@@ -166,6 +165,5 @@ public class Tren {
         }
         return nuevaTerminal;
     }
-
 
 }
