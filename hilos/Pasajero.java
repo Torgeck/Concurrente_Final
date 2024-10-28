@@ -74,18 +74,22 @@ public class Pasajero implements Runnable {
                 System.out.println("ERROR al esperar en hall");
             }
         }
-        atencion.esperarAtencion();
+        atencion.esperarAtencion(this.reserva);
         atencion.salirPuestoAtencion(this);
 
-        System.out.println("Pasajero " + this.idPasajero + " se dirije al tren");
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {
-            System.out.println("ERROR al ir al tren");
+        if (this.reserva == null) {
+            System.out.println("Me voy del aeropuerto, no quedan vuelos");
+        } else {
+            System.out.println("Pasajero " + this.idPasajero + " se dirije al tren");
+            try {
+                Thread.sleep(5000);
+            } catch (Exception e) {
+                System.out.println("ERROR al ir al tren");
+            }
+
+            tren.subirTren(this.idPasajero, reserva.getTerminal());
+            tren.bajarTren(this.idPasajero, reserva.getTerminal());
+
         }
-
-
-        System.out.println("Pasajero " + this.idPasajero + " murio");
-        // Luego se va al cole a hacer sus cosas
     }
 }
