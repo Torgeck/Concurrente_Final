@@ -11,6 +11,14 @@ public class PuestoEmbarque {
         this.terminal = terminal;
     }
 
+    public int getIdPuesto() {
+        return idPuesto;
+    }
+
+    public Terminal getTerminal() {
+        return terminal;
+    }
+
     // TODO logica para embarque
     public synchronized void avisarEmbarque() {
         notifyAll();
@@ -20,5 +28,4 @@ public class PuestoEmbarque {
         wait();
     }
 
-    
 }
