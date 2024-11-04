@@ -1,16 +1,25 @@
 package hilos;
 
-public class Reloj implements Runnable{
+import console.Console;
 
-    private long tiempoActual;
+import java.util.concurrent.atomic.AtomicInteger;
+
+public class Reloj implements Runnable {
+    // FORMATO DE HORA 24-00
+    private int dia;
+    private AtomicInteger horaActual;
+    private AtomicInteger minutoActual;
 
     public Reloj() {
-        tiempoActual = 6000;
+        this.dia = 0;
+        this.horaActual = new AtomicInteger(6);
+        this.minutoActual = new AtomicInteger(0);
     }
 
     public void run() {
-        while(true) {
+        while (true) {
             try {
+                System.out.println(Console.colorString("BLUE", "Tiempo actual" + this.getTime()));
                 Thread.sleep(5000);
                 incrementTime();
             } catch (Exception e) {
@@ -19,33 +28,35 @@ public class Reloj implements Runnable{
         }
     }
 
-    public synchronized void incrementTime(){
-        // Aumenta el tiempo actual mas 6 min
-        if(tiempoActual <= 24000) {
-            tiempoActual += 100;
+    public synchronized void incrementTime() {
+        // Aumenta el tiempo actual mas 15 min
+        if (horaActual.get() < 24) {
+            if (minutoActual.addAndGet(15) == 60) {
+                minutoActual.set(0);
+                if (horaActual.incrementAndGet() == 24) {
+                    horaActual.set(0);
+                }
+            }
         }
-        else{
-            tiempoActual = 0;
-        }
     }
 
-    public synchronized long getTime(){
-        return tiempoActual;
+    public synchronized int getTime() {
+        return horaActual.get() * 100 + minutoActual.get();
     }
 
-    public synchronized boolean estaAbiertoAlPublico(){
-        return (tiempoActual <= 22000) && (tiempoActual >= 6000);
+    public synchronized boolean estaAbiertoAlPublico() {
+        return (this.horaActual.get() < 22) && (horaActual.get() >= 6);
     }
 
-    public synchronized boolean tieneTiempoFreeshop(long timpoEmbarque){
-        // Tiene mas de 30min antes del vuelo
-        return this.tiempoActual - timpoEmbarque >= 500;
+    public synchronized boolean tieneTiempoFreeshop(int tiempoEmbarque) {
+        // TODO implementar funcionalidad en Pasajero Tiene mas de 30min antes del vuelo
+        return (this.horaActual.get() * 100) - tiempoEmbarque >= 50;
     }
 
-    public synchronized boolean perdioVuelo(long tiempoEmbarque){
-        return tiempoEmbarque > this.tiempoActual;
+    public synchronized boolean perdioVuelo(int tiempoEmbarque) {
+        // TODO implementar funcionalidad en Pasajero
+        return tiempoEmbarque > horaActual.get() * 100 + minutoActual.get();
     }
-
 
 
 }
