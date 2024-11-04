@@ -6,10 +6,10 @@ public class Vuelo {
     private String idVuelo;
     private String aerolinea;
     private char terminal;
-    private int puertaEmbarque;
-    private long horaEmbarque;
+    private PuestoEmbarque puertaEmbarque;
+    private int horaEmbarque;
 
-    public Vuelo(String aerolinea, char terminal, int puertaEmbarque, long horaEmbarque) {
+    public Vuelo(String aerolinea, char terminal, PuestoEmbarque puertaEmbarque, int horaEmbarque) {
         this.aerolinea = aerolinea;
         this.horaEmbarque = horaEmbarque;
         this.terminal = terminal;
@@ -35,7 +35,7 @@ public class Vuelo {
         return terminal;
     }
 
-    public int getPuertaEmbarque() {
+    public PuestoEmbarque getPuertaEmbarque() {
         return puertaEmbarque;
     }
 
@@ -43,4 +43,7 @@ public class Vuelo {
         return horaEmbarque;
     }
 
+    public String toString() {
+        return "ID: " + this.idVuelo + "| Aerolinea: " + this.aerolinea + "| Terminal: " + this.terminal + "| PEmb: " + this.puertaEmbarque.getIdPuesto() + "| Hora: " + this.horaEmbarque;
+    }
 }
