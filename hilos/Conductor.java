@@ -7,6 +7,10 @@ public class Conductor implements Runnable {
 
     private Tren tren;
 
+    public Conductor(Tren tren) {
+        this.tren = tren;
+    }
+
     public void run() {
         int terminalActual;
 
@@ -16,10 +20,10 @@ public class Conductor implements Runnable {
             tren.esperarEnAeropuerto();
 
             while (terminalActual < 3) {
-                tren.irSiguieteTerminal();
+                tren.irSiguienteTerminal();
                 try {
-                    System.out.println(Console.colorString("GREEN", "===== Tren viajando ====="));
                     Thread.sleep(2000);
+                    tren.avisarPasajerosParada();
                 } catch (Exception e) {
                     System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
                 }
