@@ -1,5 +1,6 @@
 package hilos;
 
+import console.Console;
 import pasivos.Aeropuerto;
 import pasivos.PuestoAtencion;
 import pasivos.Reserva;
@@ -11,7 +12,6 @@ public class Pasajero implements Runnable {
     private int idPasajero;
     private Reserva reserva;
     private Aeropuerto aeropuerto;
-    private Tren tren;
 
     public Pasajero(Aeropuerto aeropuerto, String nombreEmpresa) {
         this.idPasajero = generarID();
@@ -43,42 +43,35 @@ public class Pasajero implements Runnable {
         this.aeropuerto = aeropuerto;
     }
 
-    public Tren getTren() {
-        return tren;
-    }
-
-    public void setTren(Tren tren) {
-        this.tren = tren;
-    }
-
     public void run() {
         PuestoAtencion atencion = null;
         // El aeropuerto se encarga de producir pasajeros de tal a cierta hora
         try {
             // Se dirige al puesto de informes y obtiene el puesto de atencion
             atencion = aeropuerto.getPuestoInformes().obtenerPuestoAtencion(reserva.getEmpresa());
-            System.out.println(
-                    "El pasajero " + this.idPasajero + " se dirige al puesto de atencion [" + atencion.getIdPuesto()
-                            + "]");
+            System.out.println(Console.colorString("GREEN",
+                    "El pasajero " + this.idPasajero + " se dirige al puesto de atencion [" + atencion.getAerolinea()
+                            + "]"));
             Thread.sleep(5000);
         } catch (Exception e) {
             System.out.println("Le exploto la reserva en la cara a pasajero " + this.idPasajero);
         }
 
         // Si no hay lugar en la cola entra a hall a esperar
+        // TODO solucionar de algun modo el nullPointerException de atencion
         while (!atencion.entrarCola(this)) {
             try {
-                System.out.println("Pasajero " + this.idPasajero + "Esperando en hall");
+                System.out.println(Console.colorString("WHITE", "Pasajero " + this.idPasajero + " esperando en hall \uD83D\uDCA4\uD83D\uDCA4"));
                 aeropuerto.getHall().esperarEnHall();
             } catch (Exception e) {
                 System.out.println("ERROR al esperar en hall");
             }
         }
-        atencion.esperarAtencion(this.reserva);
+        this.reserva = atencion.esperarAtencion();
         atencion.salirPuestoAtencion(this);
 
         if (this.reserva == null) {
-            System.out.println("Me voy del aeropuerto, no quedan vuelos");
+            System.out.println(Console.colorString("BLACK", "\uD83D\uDC80\uD83D\uDC80 Me voy del aeropuerto, no quedan vuelos \uD83D\uDC80\uD83D\uDC80"));
         } else {
             System.out.println("Pasajero " + this.idPasajero + " se dirije al tren");
             try {
@@ -87,8 +80,9 @@ public class Pasajero implements Runnable {
                 System.out.println("ERROR al ir al tren");
             }
 
-            tren.subirTren(this.idPasajero, reserva.getTerminal());
-            tren.bajarTren(this.idPasajero, reserva.getTerminal());
+            aeropuerto.getTren().subirTren(this.idPasajero, reserva.getTerminal());
+            aeropuerto.getTren().esperarEnTren(this.idPasajero);
+            aeropuerto.getTren().bajarTren(this.idPasajero, reserva.getTerminal());
 
         }
     }
