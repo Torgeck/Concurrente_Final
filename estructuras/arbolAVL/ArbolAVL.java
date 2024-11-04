@@ -2,7 +2,7 @@ package estructuras.arbolAVL;
 
 import estructuras.lineales.Lista;
 
-@SuppressWarnings({ "rawtypes", "unchecked" })
+@SuppressWarnings({"rawtypes", "unchecked"})
 
 public class ArbolAVL {
     // Atributo
@@ -235,11 +235,11 @@ public class ArbolAVL {
         if (padre == null)
             this.raiz = null;
 
-        // Si el elemento a eliminar es el HI seteo al mismo como null
+            // Si el elemento a eliminar es el HI seteo al mismo como null
         else if (padre.getIzquierdo() == nodo)
             padre.setIzquierdo(null);
 
-        // Caso contrario seteo el HD a null
+            // Caso contrario seteo el HD a null
         else
             padre.setDerecho(null);
     }
@@ -253,14 +253,14 @@ public class ArbolAVL {
         if (padre == null)
             this.raiz = (hijoDer == null) ? hijoIzq : hijoDer;
 
-        // Veo si nodo es HI del padre
+            // Veo si nodo es HI del padre
         else if (padre.getIzquierdo() == nodo) {
 
             // Si el HI del nodo no es nulo entonces seteo al mismo con su padre
             if (hijoIzq != null)
                 padre.setIzquierdo(hijoIzq);
 
-            // Caso contrario seteo a su HD
+                // Caso contrario seteo a su HD
             else
                 padre.setIzquierdo(hijoDer);
         }
@@ -271,7 +271,7 @@ public class ArbolAVL {
             if (hijoIzq != null)
                 padre.setDerecho(hijoIzq);
 
-            // Caso contrario seteo a su HD
+                // Caso contrario seteo a su HD
             else
                 padre.setDerecho(hijoDer);
         }
@@ -486,6 +486,44 @@ public class ArbolAVL {
         }
     }
 
+    public Lista listarValuesRango(Comparable elemMinimo, Comparable elemMaximo) {
+        /*
+         * Recorre parte del arbol y devuelve una lista ordenada con los elementos que
+         * se encuentran en el intervalo de los parametros ingresados []
+         */
+        Lista lista = new Lista();
+
+        // Checkeo si el arbol esta vacio
+        if (this.raiz != null)
+            // Checkeo que los parametros esten ingresados bien
+            if (elemMinimo.compareTo(elemMaximo) <= 0)
+                listarValuesRangoAux(elemMinimo, elemMaximo, lista, this.raiz);
+
+        return lista;
+    }
+
+    private void listarValuesRangoAux(Comparable min, Comparable max, Lista lista, NodoAVL nodo) {
+        // Metodo recursivo que devuelve una lista ordenada entre min y max
+
+        // Checkeo que le nodo no sea null
+        if (nodo != null) {
+            Comparable key = nodo.getKey();
+
+            // Si el elemento actual es menor que el maximo entonces bajo por derecha
+            if (key.compareTo(max) < 0)
+                listarValuesRangoAux(min, max, lista, nodo.getDerecho());
+
+            // Si el elemento actual se encuentra entremedio de los valores pedidos lo
+            // agrego a la lista
+            if (key.compareTo(min) >= 0 && key.compareTo(max) <= 0)
+                lista.insertar(nodo.getValue(), 1);
+
+            // Si el elemento actual es mayor que el minimo bajo a la izquierda
+            if (key.compareTo(min) > 0)
+                listarValuesRangoAux(min, max, lista, nodo.getIzquierdo());
+        }
+    }
+
     public Comparable minimoElem() {
         // Metodo que devuelve el elemento minimo del arbolBB
         return minimoAux(this.raiz, null);
@@ -499,7 +537,7 @@ public class ArbolAVL {
             if (nodo.getIzquierdo() == null)
                 key = nodo.getKey();
 
-            // Si no avanza a su HI
+                // Si no avanza a su HI
             else
                 key = minimoAux(nodo.getIzquierdo(), key);
         }
