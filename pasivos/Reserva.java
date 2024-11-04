@@ -3,7 +3,7 @@ package pasivos;
 public class Reserva {
 
     private String empresa;
-    private int puertaEmbarque;
+    private PuestoEmbarque puertaEmbarque;
     private char terminal;
     private long horaEmbarque;
 
@@ -22,11 +22,11 @@ public class Reserva {
         return empresa;
     }
 
-    public int getPuertaEmbarque() {
+    public PuestoEmbarque getPuertaEmbarque() {
         return puertaEmbarque;
     }
 
-    public void setPuertaEmbarque(int puertaEmbarque) {
+    public void setPuertaEmbarque(PuestoEmbarque puertaEmbarque) {
         this.puertaEmbarque = puertaEmbarque;
     }
 
@@ -47,7 +47,7 @@ public class Reserva {
     }
 
     public String toString() {
-        return "[ Emp:" + this.empresa + ", Ter:" + this.terminal + ", P.Emb: " + this.puertaEmbarque + ", H.Emb:"
+        return "[ Emp:" + this.empresa + ", Ter:" + this.terminal + ", P.Emb: " + this.puertaEmbarque.getIdPuesto() + ", H.Emb:"
                 + this.horaEmbarque + "]";
     }
 
