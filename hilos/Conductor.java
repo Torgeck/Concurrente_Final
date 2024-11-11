@@ -6,9 +6,11 @@ import pasivos.Tren;
 public class Conductor implements Runnable {
 
     private Tren tren;
+    private int tiempoViaje;
 
     public Conductor(Tren tren) {
         this.tren = tren;
+        this.tiempoViaje = 1000 * 10;
     }
 
     public void run() {
@@ -22,7 +24,7 @@ public class Conductor implements Runnable {
             while (terminalActual < 3) {
                 tren.irSiguienteTerminal();
                 try {
-                    Thread.sleep(2000);
+                    Thread.sleep(this.tiempoViaje);
                     tren.avisarPasajerosParada();
                 } catch (Exception e) {
                     System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
@@ -30,7 +32,13 @@ public class Conductor implements Runnable {
                 tren.esperarDesembarquePasajeros();
                 terminalActual++;
             }
+
             tren.irAeropuerto();
+            try {
+                Thread.sleep(this.tiempoViaje * 3);
+            } catch (InterruptedException e) {
+                System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
+            }
         }
     }
 }

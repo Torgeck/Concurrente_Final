@@ -31,10 +31,10 @@ public class Empleado implements Runnable {
         System.out.println("Empleado " + this.idEmpleado + " se dirige al puesto " + puesto.getIdPuesto());
         // TODO Cambiar condicion para utilizar horarios
         while (true) {
-            puesto.atenderPasajero();
+            puesto.atenderPasajero(this);
             // Aca lo atiende
             try {
-                Thread.sleep(random.nextInt(8) * 1000);
+                Thread.sleep((random.nextInt(8) + 1) * 1000);
             } catch (Exception e) {
                 System.out.println("ERROR exploto el empleado [" + this.idEmpleado + "]");
             }

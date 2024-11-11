@@ -4,7 +4,7 @@ public class Reserva {
 
     private String empresa;
     private PuestoEmbarque puertaEmbarque;
-    private char terminal;
+    private Terminal terminal;
     private long horaEmbarque;
 
     public Reserva(String empresa) {
@@ -30,11 +30,11 @@ public class Reserva {
         this.puertaEmbarque = puertaEmbarque;
     }
 
-    public char getTerminal() {
+    public Terminal getTerminal() {
         return terminal;
     }
 
-    public void setTerminal(char terminal) {
+    public void setTerminal(Terminal terminal) {
         this.terminal = terminal;
     }
 

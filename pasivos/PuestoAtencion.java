@@ -9,27 +9,27 @@ import estructuras.arbolAVL.ArbolAVL;
 import estructuras.lineales.Lista;
 import hilos.Empleado;
 import hilos.Pasajero;
+import hilos.Reloj;
 
 public class PuestoAtencion {
 
     private static int ID = 0;
     private int idPuesto;
-    private String aerolinea;
     private Aeropuerto aeropuerto;
+    private String aerolinea;
     private ArbolAVL vuelosAerolinea;
     private Semaphore colaDisponibilidad;
     private Semaphore pasajeroListo;
     private Semaphore mutexEmpleado;
     private Semaphore mostrador;
     private Exchanger<Reserva> exchanger;
-    private Empleado empleado;
     private WalkieTalkie walkie;
 
     public PuestoAtencion(Aeropuerto aeropuerto, String aerolinea, int max, WalkieTalkie walkieGuardia) {
         this.aeropuerto = aeropuerto;
         this.aerolinea = aerolinea;
         this.idPuesto = generarID();
-        this.exchanger = new Exchanger<Reserva>();
+        this.exchanger = new Exchanger<>();
         this.colaDisponibilidad = new Semaphore(max, true);
         this.mostrador = new Semaphore(1, true);
         this.mutexEmpleado = new Semaphore(0);
@@ -44,10 +44,6 @@ public class PuestoAtencion {
 
     public int getIdPuesto() {
         return this.idPuesto;
-    }
-
-    public void setEmpleado(Empleado empleado) {
-        this.empleado = empleado;
     }
 
     private int generarID() {
@@ -66,15 +62,15 @@ public class PuestoAtencion {
     }
 
     // Metodos empleado
-    public void atenderPasajero() {
+    public void atenderPasajero(Empleado empleado) {
         Vuelo vueloObtenido;
         Reserva reserva = null;
         try {
-            System.out.println(Console.colorString("PURPLE", "Empleado " + this.empleado.getIdEmpleado() + " en puesto de atencion[" + this.aerolinea
+            System.out.println(Console.colorString("PURPLE", "Empleado " + empleado.getIdEmpleado() + " en puesto de atencion[" + this.aerolinea
                     + "] esperando pasajeros para atender"));
             mutexEmpleado.acquire();
 
-            vueloObtenido = obtenerVueloAleatorio(2000);
+            vueloObtenido = obtenerVueloAleatorio(2);
             if (vueloObtenido != null) {
                 reserva = new Reserva(vueloObtenido);
             } else {
@@ -82,7 +78,7 @@ public class PuestoAtencion {
             }
             exchanger.exchange(reserva);
 
-            System.out.println(Console.colorString("PURPLE", "== Empleado[" + this.empleado.getIdEmpleado() + "] atendiendo pasajero =="));
+            System.out.println(Console.colorString("PURPLE", "== Empleado[" + empleado.getIdEmpleado() + "] atendiendo pasajero =="));
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con empleado al querer atender al pasajero " + this.idPuesto + e.getMessage()));
             e.printStackTrace();
@@ -100,8 +96,10 @@ public class PuestoAtencion {
 
     public Vuelo obtenerVueloAleatorio(int brechaTiempo) {
         Random random = new Random();
-        long tiempoBase = this.aeropuerto.getReloj().getTime() + brechaTiempo;
-        long tiempoMax = 22000;
+
+        long hora = Reloj.convertirHora(brechaTiempo);
+        long tiempoBase = this.aeropuerto.getReloj().getTime() + hora;
+        long tiempoMax = Reloj.convertirHora(22);
         Lista listaVuelos;
         Vuelo vueloObtenido = null;
 

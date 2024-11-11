@@ -4,8 +4,7 @@ public class Hall {
 
     private Aeropuerto aeropuerto;
 
-    public Hall(Aeropuerto aeropuerto) {
-        this.aeropuerto = aeropuerto;
+    public Hall() {
     }
 
     public synchronized void avisoLugarLibre() {

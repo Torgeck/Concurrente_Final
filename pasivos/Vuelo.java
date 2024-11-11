@@ -5,11 +5,11 @@ public class Vuelo {
     private static int NUMERO_VUELO = 0;
     private String idVuelo;
     private String aerolinea;
-    private char terminal;
+    private Terminal terminal;
     private PuestoEmbarque puertaEmbarque;
     private int horaEmbarque;
 
-    public Vuelo(String aerolinea, char terminal, PuestoEmbarque puertaEmbarque, int horaEmbarque) {
+    public Vuelo(String aerolinea, Terminal terminal, PuestoEmbarque puertaEmbarque, int horaEmbarque) {
         this.aerolinea = aerolinea;
         this.horaEmbarque = horaEmbarque;
         this.terminal = terminal;
@@ -31,7 +31,7 @@ public class Vuelo {
         return aerolinea;
     }
 
-    public char getTerminal() {
+    public Terminal getTerminal() {
         return terminal;
     }
 
