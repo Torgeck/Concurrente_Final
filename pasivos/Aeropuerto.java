@@ -23,21 +23,17 @@ public class Aeropuerto {
 
     public Aeropuerto(List<String> empresas, int capacidadMax, Tren tren, Reloj reloj) {
         // generar aeropuerto
+        this.reloj = reloj;
         this.hashPuestoAtencion = new HashMap<>();
         this.puestoInformes = new PuestoInformes(hashPuestoAtencion);
-        this.hall = new Hall(this);
+        this.hall = new Hall();
         this.guardia = new Guardia(this);
         this.hashTerminal = new HashMap<>();
         this.tren = tren;
-        this.reloj = reloj;
         inicializarHashVuelos(empresas);
         generarTerminales();
         generarVuelos(empresas);
         generarPuestosAtencion(empresas, capacidadMax);
-    }
-
-    public Reloj getReloj() {
-        return reloj;
     }
 
     public Hall getHall() {
@@ -45,27 +41,31 @@ public class Aeropuerto {
     }
 
     public PuestoInformes getPuestoInformes() {
-        return puestoInformes;
+        return this.puestoInformes;
     }
 
     public HashMap<String, PuestoAtencion> getHashPuestoAtencion() {
-        return hashPuestoAtencion;
+        return this.hashPuestoAtencion;
     }
 
     public Guardia getGuardia() {
-        return guardia;
+        return this.guardia;
     }
 
     public HashMap<Character, Terminal> getHashTerminal() {
-        return hashTerminal;
+        return this.hashTerminal;
     }
 
     public HashMap<String, Lista> getHashVuelos() {
-        return hashVuelos;
+        return this.hashVuelos;
     }
 
     public Tren getTren() {
-        return tren;
+        return this.tren;
+    }
+
+    public Reloj getReloj() {
+        return this.reloj;
     }
 
     public void generarPuestosAtencion(List<String> empresas, int capacidadMax) {
@@ -77,27 +77,30 @@ public class Aeropuerto {
     }
 
     public void generarTerminales() {
-        hashTerminal.put('A', new Terminal(this, 'A', 1, 7));
-        hashTerminal.put('B', new Terminal(this, 'B', 8, 15));
-        hashTerminal.put('C', new Terminal(this, 'C', 16, 20));
+        int capMax = 15;
+        int cantCajas = 2;
+        hashTerminal.put('A', new Terminal(this, 'A', 1, 7, cantCajas, capMax));
+        hashTerminal.put('B', new Terminal(this, 'B', 8, 15, cantCajas, capMax));
+        hashTerminal.put('C', new Terminal(this, 'C', 16, 20, cantCajas, capMax));
     }
 
     public void generarVuelos(List<String> empresas) {
-        int horaApertura = 6000;
-        int espacio = 2000;
+        int hora = 6;
+        int espacio = 30;
         int cantEmpresas = empresas.size();
-        int cantVuelos = 13;
+        int cantVuelos = 30;
         Random rand = new Random();
         Vuelo vuelo;
         String empresa;
         Terminal terminal;
+        hora = Reloj.convertirHora(hora, espacio);
+
         for (int i = 1; i <= cantVuelos; i++) {
-            horaApertura += espacio;
             empresa = empresas.get(rand.nextInt(cantEmpresas));
             terminal = getTerminalRandom();
-            vuelo = new Vuelo(empresa, terminal.getIdTerminal(), terminal.getPuestoRandom(), horaApertura);
+            vuelo = new Vuelo(empresa, terminal, terminal.getPuestoRandom(), hora);
             agregarVuelo(vuelo);
-
+            hora = Reloj.addMin(hora, espacio);
         }
         System.out.println(Console.colorString("YELLOW", this.hashVuelos.toString()));
     }
