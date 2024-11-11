@@ -7,8 +7,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Reloj implements Runnable {
     // FORMATO DE HORA 24-00
     private int dia;
-    private AtomicInteger horaActual;
-    private AtomicInteger minutoActual;
+    private final AtomicInteger horaActual;
+    private final AtomicInteger minutoActual;
 
     public Reloj() {
         this.dia = 0;
@@ -16,16 +16,23 @@ public class Reloj implements Runnable {
         this.minutoActual = new AtomicInteger(0);
     }
 
-    public void run() {
-        while (true) {
-            try {
-                System.out.println(Console.colorString("BLUE", "Tiempo actual" + this.getTime()));
-                Thread.sleep(5000);
-                incrementTime();
-            } catch (Exception e) {
-                System.out.println("ERROR exploto el reloj");
-            }
+    public static int addMin(int hora, int min) {
+        // Metodo que aniade minutos a la hora pasada por parametro
+        int horaAux = hora / 100;
+        int minAux = (hora % 100) + min;
+        int aux;
+
+        if (minAux >= 60) {
+            aux = minAux / 60;
+            minAux = minAux % 60;
+            horaAux = horaAux + aux;
         }
+
+        if (horaAux >= 24) {
+            horaAux = horaAux % 24;
+        }
+
+        return horaAux * 100 + minAux;
     }
 
     public synchronized void incrementTime() {
@@ -35,6 +42,7 @@ public class Reloj implements Runnable {
                 minutoActual.set(0);
                 if (horaActual.incrementAndGet() == 24) {
                     horaActual.set(0);
+                    this.dia++;
                 }
             }
         }
@@ -58,5 +66,47 @@ public class Reloj implements Runnable {
         return tiempoEmbarque > horaActual.get() * 100 + minutoActual.get();
     }
 
+    public static int convertirHora(int hora, int minutos) {
+        /* Metodo que devuelve la hora en formato hhmm.
+        i.e: hora = 4; minutos = 40 => 440
+        */
+        int minAux = minutos, horaAux = hora;
+
+        if (minAux >= 60) {
+            minAux = minutos % 60;
+            horaAux += Math.floorDiv(minutos, 60);
+        }
+
+        if (horaAux > 24) {
+            horaAux = horaAux % 24;
+        }
+
+        return horaAux * 100 + minAux;
+    }
+
+    public static int convertirHora(int hora) {
+        /* Metodo que devuelve la hora en formato hhmm.
+        i.e: hora = 4 => 400
+        */
+        int horaAux = hora;
+
+        if (horaAux > 24) {
+            horaAux = horaAux % 24;
+        }
+
+        return horaAux * 100;
+    }
+
+    public void run() {
+        while (this.dia < 7) {
+            try {
+                System.out.println(Console.colorString("BLUE", "Tiempo actual " + this.horaActual.get() + ":" + this.minutoActual.get()));
+                Thread.sleep(5000);
+                incrementTime();
+            } catch (Exception e) {
+                System.out.println("ERROR exploto el reloj");
+            }
+        }
+    }
 
 }
