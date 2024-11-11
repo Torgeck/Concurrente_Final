@@ -8,7 +8,15 @@ public class EmpleadoEmbarque implements Runnable {
     private static int ID = 0;
     private int idEmpleado;
     private PuestoEmbarque puesto;
-    private Terminal terminal;
+
+    public EmpleadoEmbarque(PuestoEmbarque puesto) {
+        this.puesto = puesto;
+        this.idEmpleado = genID();
+    }
+
+    private int genID() {
+        return ID++;
+    }
 
     public void run() {
         // TODO implementar run de empleadoEmbarque
