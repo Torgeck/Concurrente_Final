@@ -100,7 +100,7 @@ public class Tren {
         lock.lock();
         try {
             while (!flagEnAeropuerto.get()) {
-                System.out.println(Console.colorString("GREEN", "Pasajero " + idPasajero + " esperando el tren \uD83D\uDC40⏳\uD83E\uDD71"));
+                System.out.println(Console.colorString("WHITE", "Pasajero " + idPasajero + " esperando el tren \uD83D\uDC40⏳\uD83E\uDD71"));
                 enAeropuerto.await();
             }
             // Ocupa lugar para su terminal
@@ -131,7 +131,6 @@ public class Tren {
         try {
             // Verifica que llego a su terminal y si el tren esta parado, si no espera
             while ((terminal != getTerminalActual()) || flagEnViaje.get()) {
-                // System.out.println(Console.colorString("CYAN", "Pasajero" + idPasajero + " quiere bajar en terminal " + terminal + " estamos en terminal " + getTerminalActual()));
                 this.enViaje.await();
             }
             // Se baja en su terminal
