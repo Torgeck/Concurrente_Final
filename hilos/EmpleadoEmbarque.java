@@ -1,5 +1,6 @@
 package hilos;
 
+import console.Console;
 import pasivos.PuestoEmbarque;
 import pasivos.Terminal;
 
@@ -19,13 +20,20 @@ public class EmpleadoEmbarque implements Runnable {
     }
 
     public void run() {
-        // TODO implementar run de empleadoEmbarque
-
-        // Checkea si aeropuerto esta abierto
-
-        // Se fija si hay vuelos proximos en su puerta
-
-        // avisa a los pasajeros en terminal
+        boolean flag = true;
+        while (flag) {
+            System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " entra a laburar"));
+            // Y mientras sea horario de trabajo
+            while (puesto.hayVuelos()) {
+                puesto.actualizarVuelo();
+                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " crea recordatorio embarque del vuelo"));
+                puesto.ponerAlarma();
+                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " avisa a pasajeros para el embarque del vuelo: " + puesto.getVueloActual()));
+                puesto.avisarPasajerosEmbarque();
+            }
+            System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " no hay mas vuelos para este puesto por hoy"));
+            flag = false;
+        }
 
     }
 
