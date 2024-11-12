@@ -79,27 +79,29 @@ public class Aeropuerto {
     public void generarTerminales() {
         int capMax = 15;
         int cantCajas = 2;
-        hashTerminal.put('A', new Terminal(this, 'A', 1, 7, cantCajas, capMax));
-        hashTerminal.put('B', new Terminal(this, 'B', 8, 15, cantCajas, capMax));
-        hashTerminal.put('C', new Terminal(this, 'C', 16, 20, cantCajas, capMax));
+        hashTerminal.put('A', new Terminal(this, this.reloj, 'A', 1, 7, cantCajas, capMax));
+        hashTerminal.put('B', new Terminal(this, this.reloj, 'B', 8, 15, cantCajas, capMax));
+        hashTerminal.put('C', new Terminal(this, this.reloj, 'C', 16, 20, cantCajas, capMax));
     }
 
     public void generarVuelos(List<String> empresas) {
-        int hora = 6;
+        int hora = 10;
         int espacio = 30;
         int cantEmpresas = empresas.size();
-        int cantVuelos = 30;
+        int cantVuelos = 5; // 20
         Random rand = new Random();
         Vuelo vuelo;
         String empresa;
         Terminal terminal;
+        PuestoEmbarque puestoEmb;
         hora = Reloj.convertirHora(hora, espacio);
 
         for (int i = 1; i <= cantVuelos; i++) {
             empresa = empresas.get(rand.nextInt(cantEmpresas));
             terminal = getTerminalRandom();
-            vuelo = new Vuelo(empresa, terminal, terminal.getPuestoRandom(), hora);
-            agregarVuelo(vuelo);
+            puestoEmb = terminal.getPuestoRandom();
+            vuelo = new Vuelo(empresa, terminal, puestoEmb, hora);
+            agregarVuelo(vuelo, puestoEmb);
             hora = Reloj.addMin(hora, espacio);
         }
         System.out.println(Console.colorString("YELLOW", this.hashVuelos.toString()));
@@ -112,9 +114,10 @@ public class Aeropuerto {
         }
     }
 
-    public boolean agregarVuelo(Vuelo vuelo) {
+    public void agregarVuelo(Vuelo vuelo, PuestoEmbarque puestoEmb) {
         Lista lista = hashVuelos.get(vuelo.getAerolinea());
-        return lista.insertarInicio(vuelo);
+        puestoEmb.addVuelo(vuelo);
+        lista.insertarInicio(vuelo);
     }
 
     public Terminal getTerminalRandom() {
