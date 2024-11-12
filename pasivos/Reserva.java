@@ -5,7 +5,8 @@ public class Reserva {
     private String empresa;
     private PuestoEmbarque puertaEmbarque;
     private Terminal terminal;
-    private long horaEmbarque;
+    private String vueloID;
+    private int horaEmbarque;
 
     public Reserva(String empresa) {
         this.empresa = empresa;
@@ -14,16 +15,21 @@ public class Reserva {
     public Reserva(Vuelo vuelo) {
         this.empresa = vuelo.getAerolinea();
         this.terminal = vuelo.getTerminal();
+        this.vueloID = vuelo.getIdVuelo();
         this.puertaEmbarque = vuelo.getPuertaEmbarque();
         this.horaEmbarque = vuelo.getHoraEmbarque();
     }
 
+    public String getVueloID() {
+        return this.vueloID;
+    }
+
     public String getEmpresa() {
-        return empresa;
+        return this.empresa;
     }
 
     public PuestoEmbarque getPuertaEmbarque() {
-        return puertaEmbarque;
+        return this.puertaEmbarque;
     }
 
     public void setPuertaEmbarque(PuestoEmbarque puertaEmbarque) {
@@ -31,18 +37,18 @@ public class Reserva {
     }
 
     public Terminal getTerminal() {
-        return terminal;
+        return this.terminal;
     }
 
     public void setTerminal(Terminal terminal) {
         this.terminal = terminal;
     }
 
-    public long getHoraEmbarque() {
-        return horaEmbarque;
+    public int getHoraEmbarque() {
+        return this.horaEmbarque;
     }
 
-    public void setHoraEmbarque(long horaEmbarque) {
+    public void setHoraEmbarque(int horaEmbarque) {
         this.horaEmbarque = horaEmbarque;
     }
 
