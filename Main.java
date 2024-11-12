@@ -32,9 +32,9 @@ public class Main {
         conductor.start();
 
         threadReloj.start();
-        inicializarEmpleadosPuestos(empleados, puestos, empresas);
         inicializarEmpleadosTerminal(terminales, cajeros, empEmbarque);
         inicializarPasajeros(pasajeros, ar, empresas, rand, cantPuestos);
+        inicializarEmpleadosPuestos(empleados, puestos, empresas);
 
     }
 

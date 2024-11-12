@@ -97,9 +97,9 @@ public class PuestoAtencion {
     public Vuelo obtenerVueloAleatorio(int brechaTiempo) {
         Random random = new Random();
 
-        long hora = Reloj.convertirHora(brechaTiempo);
-        long tiempoBase = this.aeropuerto.getReloj().getTime() + hora;
-        long tiempoMax = Reloj.convertirHora(22);
+        int hora = Reloj.convertirHora(brechaTiempo);
+        int tiempoBase = this.aeropuerto.getReloj().getTime() + hora;
+        int tiempoMax = Reloj.convertirHora(22);
         Lista listaVuelos;
         Vuelo vueloObtenido = null;
 
@@ -107,12 +107,7 @@ public class PuestoAtencion {
             listaVuelos = vuelosAerolinea.listarValuesRango(tiempoBase, tiempoMax);
             if (!listaVuelos.esVacia()) {
                 vueloObtenido = (Vuelo) listaVuelos.recuperar(random.nextInt(listaVuelos.longitud()) + 1);
-                //System.out.println(Console.colorString("YELLOW", "El vuelo obtenido es " + vueloObtenido.toString()));
-            } else {
-                System.out.println(Console.colorString("RED", "LA AEROLINEA NO TIENE VUELOS"));
             }
-        } else {
-            System.out.println(Console.colorString("RED", "LA AEROLINEA NO TIENE VUELOS"));
         }
 
         return vueloObtenido;
@@ -172,7 +167,7 @@ public class PuestoAtencion {
             // Se queda bloqueado hasta que lo libere empleado
             pasajeroListo.acquire();
             System.out.println(Console.colorString("GREEN", "Pasajero " + pasajero.getIdPasajero() + " saliendo del puesto de atencion["
-                    + this.aerolinea + "] con reserva: " + pasajero.getReserva().toString()));
+                    + this.aerolinea + "]"));
             // Es liberado entonces libera el mostrador
             mostrador.release();
             colaDisponibilidad.release();

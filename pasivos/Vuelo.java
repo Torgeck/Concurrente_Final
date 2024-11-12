@@ -39,7 +39,7 @@ public class Vuelo {
         return puertaEmbarque;
     }
 
-    public long getHoraEmbarque() {
+    public int getHoraEmbarque() {
         return horaEmbarque;
     }
 

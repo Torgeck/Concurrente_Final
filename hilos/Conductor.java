@@ -10,7 +10,7 @@ public class Conductor implements Runnable {
 
     public Conductor(Tren tren) {
         this.tren = tren;
-        this.tiempoViaje = 1000 * 10;
+        this.tiempoViaje = 1000 * 4;
     }
 
     public void run() {
@@ -35,7 +35,8 @@ public class Conductor implements Runnable {
 
             tren.irAeropuerto();
             try {
-                Thread.sleep(this.tiempoViaje * 3);
+                // Antes simulaba tiempoViaje * 3
+                Thread.sleep(this.tiempoViaje);
             } catch (InterruptedException e) {
                 System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
             }

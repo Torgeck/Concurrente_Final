@@ -5,6 +5,7 @@ import console.Console;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,7 +15,7 @@ public class Tren {
     private Aeropuerto aeropuerto;
     private int[] gruposTerminal;
     private int capacidadMax;
-    private int capacidadActual;
+    private AtomicInteger capacidadActual;
     private char terminalActual;
     private AtomicBoolean flagEnViaje;
     private AtomicBoolean flagEnAeropuerto;
@@ -27,7 +28,7 @@ public class Tren {
 
     public Tren(int capacidad) {
         this.capacidadMax = capacidad;
-        this.capacidadActual = 0;
+        this.capacidadActual = new AtomicInteger(0);
         this.flagEnViaje = new AtomicBoolean(false);
         this.flagEnAeropuerto = new AtomicBoolean(true);
         this.lock = new ReentrantLock();
@@ -44,8 +45,15 @@ public class Tren {
         lock.lock();
         try {
             int indice = getIndiceTerminal(terminal);
-            this.capacidadActual++;
+            this.capacidadActual.incrementAndGet();
             this.gruposTerminal[indice]++;
+
+            if (capacidadActual.get() == capacidadMax) {
+                flagEnViaje.set(true);
+                enViaje.signal();
+            } else {
+                enAeropuerto.signal();
+            }
             System.out.println(Console.colorString("YELLOW", "CAPACIDAD ACTUAL DEL TREN: [" + this.gruposTerminal[0] + "|" + this.gruposTerminal[1] + "|" + this.gruposTerminal[2] + "] = " + this.capacidadActual));
         } finally {
             lock.unlock();
@@ -83,13 +91,12 @@ public class Tren {
         return terminal;
     }
 
-    private void updateTerminal() {
+    private void actualizarTerminal() {
         lockTerminal.lock();
         try {
             terminalActual = getTerminalSiguiente(terminalActual);
             int cantGrupo = this.gruposTerminal[getIndiceTerminal(getTerminalActual())];
             latchDesembarque = new CountDownLatch(cantGrupo);
-            System.out.println(Console.colorString("RED", "=========== LATCH TERMINAL: " + this.terminalActual + latchDesembarque.getCount()));
         } finally {
             lockTerminal.unlock();
         }
@@ -106,10 +113,6 @@ public class Tren {
             // Ocupa lugar para su terminal
             System.out.println(Console.colorString("GREEN", "Pasajero " + idPasajero + " embarco el tren \uD83D\uDE89\uD83C\uDFC3"));
             ocuparLugar(terminal);
-
-            if (capacidadActual == capacidadMax) {
-                enViaje.signal();
-            }
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con pasajero al querer subir al tren"));
         } finally {
@@ -150,7 +153,7 @@ public class Tren {
             flagEnViaje.set(false);
             flagEnAeropuerto.set(true);
             System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83 El tren se esta esperando en el aeropuerto"));
-            enAeropuerto.signalAll();
+            enAeropuerto.signal();
             enViaje.await();
             flagEnAeropuerto.set(false);
         } catch (Exception e) {
@@ -165,7 +168,7 @@ public class Tren {
         try {
             flagEnViaje.set(true);
             System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83 El tren esta saliendo de la terminal: " + terminalActual + "\uD83D\uDE8F"));
-            updateTerminal();
+            actualizarTerminal();
 
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con el tren al querer ir a otra terminal"));
@@ -205,9 +208,9 @@ public class Tren {
             terminalActual = 'Q';
             barreraEmbarque.reset();
             this.gruposTerminal = new int[3];
-            this.capacidadActual = 0;
+            this.capacidadActual.set(0);
             this.flagEnViaje.compareAndSet(false, true);
-            enAeropuerto.signalAll();
+            enAeropuerto.signal();
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con el tren al querer ir al aeropuerto"));
         } finally {
