@@ -1,6 +1,7 @@
 package hilos;
 
 import console.Console;
+import pasivos.Aeropuerto;
 import pasivos.Alarma;
 
 import java.util.concurrent.PriorityBlockingQueue;
@@ -8,16 +9,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Reloj implements Runnable {
     // FORMATO DE HORA 24-00
-    private int dia;
+    private final AtomicInteger dia;
     private final AtomicInteger horaActual;
     private final AtomicInteger minutoActual;
     private PriorityBlockingQueue<Alarma> alarms;
+    private Aeropuerto aeropuerto;
 
     public Reloj() {
-        this.dia = 0;
+        this.dia = new AtomicInteger(1);
         this.horaActual = new AtomicInteger(6);
         this.minutoActual = new AtomicInteger(0);
         this.alarms = new PriorityBlockingQueue<>();
+    }
+
+    public int getDiaActual() {
+        return dia.get();
+    }
+
+    public void setAeropuerto(Aeropuerto aeropuerto) {
+        this.aeropuerto = aeropuerto;
     }
 
     public static int addMin(int hora, int min) {
@@ -56,14 +66,14 @@ public class Reloj implements Runnable {
         this.alarms.add(alarm);
     }
 
-    public synchronized void incrementTime() {
+    public synchronized void incrementTime(int min) {
         // Aumenta el tiempo actual mas 15 min
         if (horaActual.get() < 24) {
-            if (minutoActual.addAndGet(15) == 60) {
+            if (minutoActual.addAndGet(min) == 60) {
                 minutoActual.set(0);
                 if (horaActual.incrementAndGet() == 24) {
                     horaActual.set(0);
-                    this.dia++;
+                    this.dia.incrementAndGet();
                 }
             }
         }
@@ -71,10 +81,6 @@ public class Reloj implements Runnable {
 
     public synchronized int getTime() {
         return horaActual.get() * 100 + minutoActual.get();
-    }
-
-    public synchronized boolean estaAbiertoAlPublico() {
-        return (this.horaActual.get() < 22) && (horaActual.get() >= 6);
     }
 
     public static int convertirHora(int hora, int minutos) {
@@ -134,15 +140,22 @@ public class Reloj implements Runnable {
     }
 
     public void run() {
-        while (this.dia < 7) {
+        while (this.dia.get() < 7) {
             try {
                 System.out.println(Console.colorString("BLUE", "Tiempo actual " + this.horaActual.get() + ":" + this.minutoActual.get()));
                 Thread.sleep(2000);
-                incrementTime();
+                incrementTime(60);
                 checkAlarm();
+                checkApertura();
             } catch (Exception e) {
                 System.out.println(Console.colorString("RED", "ERROR exploto RELOJ"));
             }
+        }
+    }
+
+    private void checkApertura() {
+        if (this.getTime() == 600) {
+            this.aeropuerto.avisarApertura();
         }
     }
 }
