@@ -41,6 +41,10 @@ public class PuestoAtencion {
     public String getAerolinea() {
         return this.aerolinea;
     }
+    
+    public Aeropuerto getAeropuerto() {
+        return this.aeropuerto;
+    }
 
     public int getIdPuesto() {
         return this.idPuesto;
@@ -186,4 +190,5 @@ public class PuestoAtencion {
             System.out.println(Console.colorString("RED", "ERROR avisar lugar disponible a guardia"));
         }
     }
+
 }
