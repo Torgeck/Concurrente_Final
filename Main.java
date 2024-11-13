@@ -19,8 +19,9 @@ public class Main {
         Random rand = new Random();
         Tren tren = new Tren(10);
         Aeropuerto ar = new Aeropuerto(empresas, capacidadMax, tren, reloj);
+        reloj.setAeropuerto(ar);
         Thread threadReloj = new Thread(reloj);
-        Thread conductor = new Thread(new Conductor(tren));
+        Thread conductor = new Thread(new Conductor(tren, ar));
         Thread[] pasajeros = new Thread[cantPasajeros];
         Thread[] empleados = new Thread[cantPuestos];
         Thread[] cajeros = new Thread[cantCajas];
@@ -32,14 +33,14 @@ public class Main {
         conductor.start();
 
         threadReloj.start();
-        inicializarEmpleadosTerminal(terminales, cajeros, empEmbarque);
+        inicializarEmpleadosTerminal(terminales, cajeros, empEmbarque, ar);
         inicializarPasajeros(pasajeros, ar, empresas, rand, cantPuestos);
         inicializarEmpleadosPuestos(empleados, puestos, empresas);
 
     }
 
 
-    private static void inicializarEmpleadosTerminal(HashMap<Character, Terminal> terminales, Thread[] cajeros, Thread[] empEmbarque) {
+    private static void inicializarEmpleadosTerminal(HashMap<Character, Terminal> terminales, Thread[] cajeros, Thread[] empEmbarque, Aeropuerto ar) {
         int indiceCajero = 0;
         int indiceEmpleado = 0;
         for (int i = 0; i < 3; i++) {
@@ -48,7 +49,7 @@ public class Main {
 
             // Asocia cajeros con cajas
             for (int indiceCaja = 0; indiceCaja < cajas.length; indiceCaja++) {
-                cajeros[indiceCajero] = new Thread(new Cajero(cajas[indiceCaja]));
+                cajeros[indiceCajero] = new Thread(new Cajero(cajas[indiceCaja], ar));
                 cajeros[indiceCajero].start();
                 indiceCajero++;
             }
@@ -60,7 +61,7 @@ public class Main {
             HashMap<Integer, PuestoEmbarque> puestosEmbarque = terminales.get(idTerminal).getMapPuestoEmbarques();
 
             for (int indicePuerta = limInferior; indicePuerta <= limSuperior; indicePuerta++) {
-                empEmbarque[indiceEmpleado] = new Thread(new EmpleadoEmbarque(puestosEmbarque.get(indicePuerta)));
+                empEmbarque[indiceEmpleado] = new Thread(new EmpleadoEmbarque(puestosEmbarque.get(indicePuerta), ar));
                 empEmbarque[indiceEmpleado].start();
             }
         }
