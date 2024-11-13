@@ -24,16 +24,20 @@ public class Guardia implements Runnable {
 
     public void run() {
 
-        System.out.println(Console.colorString(this.color, "Guardia entro a laburar"));
-        // TODO hacer que tenga horario
-        while (true) {
-            try {
-                System.out.println(Console.colorString(this.color, idGuardia + " esperando en el hall \uD83D\uDCA4\uD83D\uDCA4"));
-                walkie.esperarLlamada();
-                System.out.println(Console.colorString(this.color, "\uD83D\uDDE3️\uD83D\uDCE3 Aviso al hall que se desocupo una cola \uD83D\uDDE3️\uD83D\uDCE3"));
-                aeropuerto.getHall().avisoLugarLibre();
-            } catch (Exception e) {
-                System.out.println(Console.colorString(this.color, "ERROR exploto el guardia en el hall"));
+        while (this.aeropuerto.getReloj().getDiaActual() < 7) {
+            if (!this.aeropuerto.estaAbiertoAlPublico()) {
+                System.out.println(Console.colorString(this.color, this.idGuardia + " Aeropuerto cerrado me voy a casa"));
+                this.aeropuerto.esperarApertura();
+            } else {
+                System.out.println(Console.colorString(this.color, "Guardia entro a laburar"));
+                try {
+                    System.out.println(Console.colorString(this.color, idGuardia + " esperando en el hall \uD83D\uDCA4\uD83D\uDCA4"));
+                    walkie.esperarLlamada();
+                    System.out.println(Console.colorString(this.color, "\uD83D\uDDE3️\uD83D\uDCE3 Aviso al hall que se desocupo una cola \uD83D\uDDE3️\uD83D\uDCE3"));
+                    aeropuerto.getHall().avisoLugarLibre();
+                } catch (Exception e) {
+                    System.out.println(Console.colorString(this.color, "ERROR exploto el guardia en el hall"));
+                }
             }
         }
     }
