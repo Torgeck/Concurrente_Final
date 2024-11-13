@@ -109,7 +109,7 @@ public class Pasajero implements Runnable {
 
         this.terminal = this.reserva.getTerminal();
         System.out.println("Pasajero " + this.idPasajero + " se dirije al tren");
-        
+
         try {
             Thread.sleep(5000);
         } catch (Exception e) {
@@ -166,19 +166,21 @@ public class Pasajero implements Runnable {
     public void run() {
         PuestoAtencion atencion = null;
         // Pasajero se dirije al puesto de informe para saber a que puesto de atencion dirigirse
-        atencion = irInformes(atencion);
+        if (this.aeropuerto.estaAbiertoAlPublico()) {
+            atencion = irInformes(atencion);
 
-        // Pasajero se dirije al puesto de antencion
-        irPuestoAtencion(atencion);
+            // Pasajero se dirije al puesto de antencion
+            irPuestoAtencion(atencion);
 
-        if (this.reserva == null) {
-            // En caso de no haber vuelos se va del aeropuerto
-            System.out.println(Console.colorString("BLACK", "\uD83D\uDC80\uD83D\uDC80 Me voy del aeropuerto, no quedan vuelos \uD83D\uDC80\uD83D\uDC80"));
-        } else {
-            // Pasajero se dirije al tren
-            irTren();
-            // Pasajero se dirije a la terminal
-            irTerminal();
+            if (this.reserva == null) {
+                // En caso de no haber vuelos se va del aeropuerto
+                System.out.println(Console.colorString("BLACK", "\uD83D\uDC80\uD83D\uDC80 Me voy del aeropuerto, no quedan vuelos \uD83D\uDC80\uD83D\uDC80"));
+            } else {
+                // Pasajero se dirije al tren
+                irTren();
+                // Pasajero se dirije a la terminal
+                irTerminal();
+            }
         }
     }
 }
