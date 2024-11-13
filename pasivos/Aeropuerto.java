@@ -125,4 +125,22 @@ public class Aeropuerto {
         Terminal terminal = hashTerminal.get(arregloTerminales[rand.nextInt(3)]);
         return terminal;
     }
+
+    public synchronized boolean estaAbiertoAlPublico() {
+        int horaActual = this.reloj.getTime();
+        return (horaActual < 2200) && (horaActual >= 6);
+    }
+
+    public synchronized void avisarApertura() {
+        notifyAll();
+    }
+
+    public synchronized void esperarApertura() {
+        try {
+            wait();
+        } catch (InterruptedException e) {
+            System.out.println(Console.colorString("RED", "ERROR al esperar apertura"));
+            e.printStackTrace();
+        }
+    }
 }
