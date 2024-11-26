@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Random;
 
 import console.Console;
+import customExceptions.AeropuertoCerradoException;
 import estructuras.lineales.Lista;
 import hilos.Guardia;
 import hilos.Reloj;
@@ -19,21 +20,25 @@ public class Aeropuerto {
     private Guardia guardia;
     private HashMap<Character, Terminal> hashTerminal;
     private HashMap<String, Lista> hashVuelos;
+    private List<String> empresas;
     private Tren tren;
+    private boolean flagCerrado;
 
-    public Aeropuerto(List<String> empresas, int capacidadMax, Tren tren, Reloj reloj) {
+    public Aeropuerto(List<String> empresas, int capMaxPuestos, Reloj reloj, int capMaxTren) {
         // generar aeropuerto
         this.reloj = reloj;
+        this.empresas = empresas;
         this.hashPuestoAtencion = new HashMap<>();
         this.puestoInformes = new PuestoInformes(hashPuestoAtencion);
         this.hall = new Hall();
         this.guardia = new Guardia(this);
         this.hashTerminal = new HashMap<>();
-        this.tren = tren;
-        inicializarHashVuelos(empresas);
+        this.tren = new Tren(this, capMaxTren);
+        this.flagCerrado = false;
+        inicializarHashVuelos();
         generarTerminales();
-        generarVuelos(empresas);
-        generarPuestosAtencion(empresas, capacidadMax);
+        generarVuelos();
+        generarPuestosAtencion(empresas, capMaxPuestos);
     }
 
     public Hall getHall() {
@@ -60,12 +65,20 @@ public class Aeropuerto {
         return this.hashVuelos;
     }
 
+    public List<String> getEmpresas() {
+        return this.empresas;
+    }
+
     public Tren getTren() {
         return this.tren;
     }
 
     public Reloj getReloj() {
         return this.reloj;
+    }
+
+    public synchronized boolean estaCerrado() {
+        return this.flagCerrado;
     }
 
     public void generarPuestosAtencion(List<String> empresas, int capacidadMax) {
@@ -79,16 +92,16 @@ public class Aeropuerto {
     public void generarTerminales() {
         int capMax = 15;
         int cantCajas = 2;
-        hashTerminal.put('A', new Terminal(this, this.reloj, 'A', 1, 7, cantCajas, capMax));
-        hashTerminal.put('B', new Terminal(this, this.reloj, 'B', 8, 15, cantCajas, capMax));
-        hashTerminal.put('C', new Terminal(this, this.reloj, 'C', 16, 20, cantCajas, capMax));
+        hashTerminal.put('A', new Terminal(this, 'A', 1, 7, cantCajas, capMax));
+        hashTerminal.put('B', new Terminal(this, 'B', 8, 15, cantCajas, capMax));
+        hashTerminal.put('C', new Terminal(this, 'C', 16, 20, cantCajas, capMax));
     }
 
-    public void generarVuelos(List<String> empresas) {
+    public void generarVuelos() {
         int hora = 10;
         int espacio = 30;
-        int cantEmpresas = empresas.size();
-        int cantVuelos = 5; // 20
+        int cantEmpresas = this.empresas.size();
+        int cantVuelos = 20;
         Random rand = new Random();
         Vuelo vuelo;
         String empresa;
@@ -97,7 +110,7 @@ public class Aeropuerto {
         hora = Reloj.convertirHora(hora, espacio);
 
         for (int i = 1; i <= cantVuelos; i++) {
-            empresa = empresas.get(rand.nextInt(cantEmpresas));
+            empresa = this.empresas.get(rand.nextInt(cantEmpresas));
             terminal = getTerminalRandom();
             puestoEmb = terminal.getPuestoRandom();
             vuelo = new Vuelo(empresa, terminal, puestoEmb, hora);
@@ -107,9 +120,9 @@ public class Aeropuerto {
         System.out.println(Console.colorString("YELLOW", this.hashVuelos.toString()));
     }
 
-    private void inicializarHashVuelos(List<String> listaEmpresas) {
+    private void inicializarHashVuelos() {
         this.hashVuelos = new HashMap<>();
-        for (String empresa : listaEmpresas) {
+        for (String empresa : this.empresas) {
             hashVuelos.put(empresa, new Lista());
         }
     }
@@ -126,12 +139,19 @@ public class Aeropuerto {
         return terminal;
     }
 
-    public synchronized boolean estaAbiertoAlPublico() {
-        int horaActual = this.reloj.getTime();
-        return (horaActual < 2200) && (horaActual >= 6);
+    public synchronized boolean estaCerradoAlPublico() {
+        int horaActual = this.reloj.getTiempoActual();
+        return this.flagCerrado || (horaActual >= 2200) || (horaActual < 600);
+    }
+
+    public void verificarAbierto() throws AeropuertoCerradoException {
+        if (estaCerradoAlPublico()) {
+            throw new AeropuertoCerradoException("El aeropuerto esta cerrado");
+        }
     }
 
     public synchronized void avisarApertura() {
+        nuevoDia();
         notifyAll();
     }
 
@@ -142,5 +162,45 @@ public class Aeropuerto {
             System.out.println(Console.colorString("RED", "ERROR al esperar apertura"));
             e.printStackTrace();
         }
+    }
+
+    public void nuevoDia() {
+        inicializarHashVuelos();
+        generarVuelos();
+    }
+
+    public void liberarCajeros() {
+        this.hashTerminal.forEach((k, terminal) -> {
+            terminal.getFreeshop().liberarCajeros();
+        });
+    }
+
+    private void liberarEmpleadosPuesto() {
+        this.hashPuestoAtencion.forEach((k, puesto) -> {
+            puesto.liberarEmpleado();
+        });
+    }
+
+    public void cerrarPermanente() {
+        this.flagCerrado = true;
+        cerrarAeropuerto();
+    }
+
+    private void cerrarAeropuerto() {
+        liberarCajeros();
+        liberarEmpleadosPuesto();
+        liberarConductor();
+    }
+
+    private void liberarConductor() {
+        this.tren.liberarConductor();
+    }
+
+    public int getHora() {
+        return this.reloj.getTiempoActual();
+    }
+
+    public void agregarAlarma(Alarma alarma) {
+        this.reloj.agregarAlarma(alarma);
     }
 }
