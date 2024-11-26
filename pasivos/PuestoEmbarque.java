@@ -1,9 +1,9 @@
 package pasivos;
 
 import console.Console;
-import hilos.Reloj;
 
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -14,15 +14,13 @@ public class PuestoEmbarque {
     private Terminal terminal;
     private LinkedList<Vuelo> vuelos;
     private Vuelo vueloActual;
-    private Reloj reloj;
     private Lock lock;
     private Condition esperarAlarma;
     private Condition esperarEmbarque;
 
-    public PuestoEmbarque(int idPuesto, Terminal terminal, Reloj reloj) {
+    public PuestoEmbarque(int idPuesto, Terminal terminal) {
         this.idPuesto = idPuesto;
         this.terminal = terminal;
-        this.reloj = reloj;
         this.lock = new ReentrantLock();
         this.esperarAlarma = lock.newCondition();
         this.esperarEmbarque = lock.newCondition();
@@ -68,7 +66,7 @@ public class PuestoEmbarque {
     public void ponerAlarma() {
         lock.lock();
         try {
-            this.reloj.addAlarm(new Alarma(vuelos.getFirst().getHoraEmbarque(), this));
+            this.terminal.agregarAlarma(new Alarma(vuelos.getFirst().getHoraEmbarque(), this));
             esperarAlarma.await();
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR al querer poner alarma"));
@@ -82,8 +80,9 @@ public class PuestoEmbarque {
         try {
             vuelos.removeFirst();
             esperarEmbarque.signalAll();
-        } catch (Exception e) {
-            System.out.println(Console.colorString("RED", "ERROR al querer avisar pasajeros de embarque"));
+        } catch (NoSuchElementException e) {
+            System.out.println(Console.colorString("RED", "ERROR al querer sacar elemeto de cola vuelo"));
+            esperarEmbarque.signalAll();
         } finally {
             lock.unlock();
         }
@@ -92,7 +91,7 @@ public class PuestoEmbarque {
     public void esperarEmbarque(Reserva reserva) {
         lock.lock();
         try {
-            while (!this.vueloActual.getIdVuelo().equals(reserva.getVueloID()) || this.reloj.getTime() != reserva.getHoraEmbarque()) {
+            while (!this.vueloActual.getIdVuelo().equals(reserva.getVueloID()) || (this.terminal.getTiempoActual() != reserva.getHoraEmbarque())) {
                 esperarEmbarque.await();
             }
         } catch (Exception e) {
