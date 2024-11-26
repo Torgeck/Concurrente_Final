@@ -14,8 +14,10 @@ public class Reloj implements Runnable {
     private final AtomicInteger minutoActual;
     private PriorityBlockingQueue<Alarma> alarms;
     private Aeropuerto aeropuerto;
+    private final int diaFinal;
 
-    public Reloj() {
+    public Reloj(int diaFinal) {
+        this.diaFinal = diaFinal;
         this.dia = new AtomicInteger(1);
         this.horaActual = new AtomicInteger(6);
         this.minutoActual = new AtomicInteger(0);
@@ -42,31 +44,11 @@ public class Reloj implements Runnable {
         return horaAux * 100 + minAux;
     }
 
-    public static int subtractMin(int hora, int min) {
-        // Metodo que resta minutos a la hora pasada por parámetro
-        int horaAux = hora / 100;
-        int minAux = hora % 100;
-
-        minAux -= min;
-
-        // Ajustar la hora y los minutos si minAux es negativo
-        while (minAux < 0) {
-            minAux += 60;
-            horaAux--;
-
-            if (horaAux < 0) {
-                horaAux += 24;
-            }
-        }
-
-        return horaAux * 100 + minAux;
-    }
-
-    public void addAlarm(Alarma alarm) {
+    public void agregarAlarma(Alarma alarm) {
         this.alarms.add(alarm);
     }
 
-    public synchronized void incrementTime(int min) {
+    public synchronized void incrementarTiempo(int min) {
         // Aumenta el tiempo actual mas 15 min
         if (horaActual.get() < 24) {
             if (minutoActual.addAndGet(min) == 60) {
@@ -74,12 +56,13 @@ public class Reloj implements Runnable {
                 if (horaActual.incrementAndGet() == 24) {
                     horaActual.set(0);
                     this.dia.incrementAndGet();
+                    System.out.println(Console.colorString("BLUE", "DIA " + this.dia.get()));
                 }
             }
         }
     }
 
-    public synchronized int getTime() {
+    public synchronized int getTiempoActual() {
         return horaActual.get() * 100 + minutoActual.get();
     }
 
@@ -114,9 +97,8 @@ public class Reloj implements Runnable {
         return horaAux * 100;
     }
 
-    // Consultar si esta bien hacer un signal
-    private void checkAlarm() {
-        if (!this.alarms.isEmpty() && this.getTime() == alarms.peek().getTiempo()) {
+    private void checkAlarma() {
+        if (!this.alarms.isEmpty() && this.getTiempoActual() == alarms.peek().getTiempo()) {
             // Avisa si el tiempo actual es el mismo o mayor que el tiempo de la alarma
             try {
                 alarms.poll().getPuestoEmbarque().sonarAlarma();
@@ -131,7 +113,7 @@ public class Reloj implements Runnable {
         // Metodo que devuelve el tiempo restante en minutos con respecto al actual
         // En caso de que sea negativo retorna 0
         int embarqueMinutos = ((horaEmbarque / 100) * 60) + (horaEmbarque % 100);
-        int actualMinutos = ((this.getTime() / 100) * 60) + (this.getTime() % 100);
+        int actualMinutos = ((this.getTiempoActual() / 100) * 60) + (this.getTiempoActual() % 100);
 
         // Calcula la diferencia en minutos
         int diferenciaMinutos = embarqueMinutos - actualMinutos;
@@ -139,23 +121,28 @@ public class Reloj implements Runnable {
         return Math.max(diferenciaMinutos, 0);
     }
 
-    public void run() {
-        while (this.dia.get() < 7) {
-            try {
-                System.out.println(Console.colorString("BLUE", "Tiempo actual " + this.horaActual.get() + ":" + this.minutoActual.get()));
-                Thread.sleep(2000);
-                incrementTime(60);
-                checkAlarm();
-                checkApertura();
-            } catch (Exception e) {
-                System.out.println(Console.colorString("RED", "ERROR exploto RELOJ"));
-            }
+    private void checkApertura() {
+        if (this.getTiempoActual() == 600) {
+            this.aeropuerto.avisarApertura();
         }
     }
 
-    private void checkApertura() {
-        if (this.getTime() == 600) {
-            this.aeropuerto.avisarApertura();
+    public void run() {
+        while (this.dia.get() <= this.diaFinal) {
+            try {
+                System.out.println(Console.colorString("BLUE", "Tiempo actual " + this.horaActual.get() + ":" + this.minutoActual.get()));
+                Thread.sleep(1000);
+                incrementarTiempo(15);
+                checkAlarma();
+                checkApertura();
+            } catch (Exception e) {
+                System.out.println(Console.colorString("RED", "ERROR exploto RELOJ"));
+                e.printStackTrace();
+            }
         }
+        // Cierra el aeropuerto
+        System.out.println(Console.colorString("RED", "CERRO AEROPUERTO"));
+        this.aeropuerto.cerrarPermanente();
+        this.aeropuerto.avisarApertura();
     }
 }
