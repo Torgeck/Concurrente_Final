@@ -3,7 +3,6 @@ package hilos;
 import console.Console;
 import pasivos.Aeropuerto;
 import pasivos.PuestoEmbarque;
-import pasivos.Terminal;
 
 public class EmpleadoEmbarque implements Runnable {
 
@@ -24,23 +23,26 @@ public class EmpleadoEmbarque implements Runnable {
 
     public void run() {
 
-        while (this.aeropuerto.getReloj().getDiaActual() < 7) {
+        while (!this.aeropuerto.estaCerrado()) {
 
-            if (!this.aeropuerto.estaAbiertoAlPublico() || !puesto.hayVuelos()) {
-                System.out.println(Console.colorString("WHITE", "Empleado embarque, Aeropuerto cerrado me voy a casa"));
+            if (this.aeropuerto.estaCerradoAlPublico() || !puesto.hayVuelos()) {
+                System.out.println(Console.colorString("WHITE", "Empleado embarque avisa que va a cerrar su puesto"));
+                this.puesto.avisarPasajerosEmbarque();
+                System.out.println(Console.colorString("WHITE", "Empleado embarque, Aeropuerto cerrado / No mas vuelos, me voy a casa"));
                 this.aeropuerto.esperarApertura();
             } else {
-                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " entra a laburar"));
+                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + this.idEmpleado + " entra a laburar"));
                 while (puesto.hayVuelos()) {
                     puesto.actualizarVuelo();
-                    System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " crea recordatorio embarque del vuelo"));
+                    System.out.println(Console.colorString("YELLOW", "Empleado embarque " + this.idEmpleado + " crea recordatorio embarque del vuelo"));
                     puesto.ponerAlarma();
-                    System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " avisa a pasajeros para el embarque del vuelo: " + puesto.getVueloActual()));
+                    System.out.println(Console.colorString("YELLOW", "Empleado embarque " + this.idEmpleado + " avisa a pasajeros para el embarque del vuelo: " + puesto.getVueloActual()));
                     puesto.avisarPasajerosEmbarque();
                 }
-                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + idEmpleado + " no hay mas vuelos para este puesto por hoy"));
+                System.out.println(Console.colorString("YELLOW", "Empleado embarque " + this.idEmpleado + " no hay mas vuelos para este puesto por hoy"));
             }
         }
+        System.out.println(Console.colorString("BLACK", "\uD83C\uDFC4\uD83C\uDFC4 Empleado de embarque " + this.idEmpleado + " se toma vacaciones por siempre \uD83C\uDFC4\uD83C\uDFC4"));
     }
 
 }
