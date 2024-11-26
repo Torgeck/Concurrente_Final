@@ -1,6 +1,7 @@
 package pasivos;
 
 import console.Console;
+import customExceptions.AeropuertoCerradoException;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -26,7 +27,8 @@ public class Tren {
     private CyclicBarrier barreraEmbarque;
     private CountDownLatch latchDesembarque;
 
-    public Tren(int capacidad) {
+    public Tren(Aeropuerto aeropuerto, int capacidad) {
+        this.aeropuerto = aeropuerto;
         this.capacidadMax = capacidad;
         this.capacidadActual = new AtomicInteger(0);
         this.flagEnViaje = new AtomicBoolean(false);
@@ -103,17 +105,19 @@ public class Tren {
     }
 
     // Metodos pasajeros
-    public void subirTren(int idPasajero, char terminal) {
+    public void subirTren(int idPasajero, char terminal) throws AeropuertoCerradoException {
         lock.lock();
         try {
             while (!flagEnAeropuerto.get()) {
+                this.aeropuerto.verificarAbierto();
                 System.out.println(Console.colorString("WHITE", "Pasajero " + idPasajero + " esperando el tren \uD83D\uDC40⏳\uD83E\uDD71"));
                 enAeropuerto.await();
             }
+            this.aeropuerto.verificarAbierto();
             // Ocupa lugar para su terminal
             System.out.println(Console.colorString("GREEN", "Pasajero " + idPasajero + " embarco el tren \uD83D\uDE89\uD83C\uDFC3"));
             ocuparLugar(terminal);
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             System.out.println(Console.colorString("RED", "ERROR con pasajero al querer subir al tren"));
         } finally {
             lock.unlock();
@@ -218,5 +222,27 @@ public class Tren {
         }
     }
 
+    public void avisarPasajerosCierre() {
+        // Metodo que nofitica a los pasajeros esperando el tren que el aeropuerto cerro
+        lock.lock();
+        try {
+            enAeropuerto.signalAll();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void liberarConductor() {
+        lock.lock();
+        try {
+            enViaje.signal();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        } finally {
+            lock.unlock();
+        }
+    }
 
 }
