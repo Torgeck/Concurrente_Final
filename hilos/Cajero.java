@@ -21,10 +21,18 @@ public class Cajero implements Runnable {
     }
 
     public void run() {
-        while (this.aeropuerto.getReloj().getDiaActual() < 7) {
+        while (!this.aeropuerto.estaCerrado()) {
 
-            if (!this.aeropuerto.estaAbiertoAlPublico()) {
-                System.out.println(Console.colorString("WHITE", "Cajero, Aeropuerto cerrado me voy a casa"));
+            if (this.aeropuerto.estaCerradoAlPublico()) {
+
+                // Se fija si hay clientes esperando en la cola
+                while (this.caja.getCantClientes() > 0) {
+                    System.out.println(Console.colorString("WHITE", "Cajero atiende a cliente para poder irse"));
+                    this.caja.atenderCliente();
+                    this.caja.liberarCliente();
+                }
+
+                System.out.println(Console.colorString("RED", "Cajero, Aeropuerto cerrado me voy a casa"));
                 this.aeropuerto.esperarApertura();
             } else {
                 System.out.println(Console.colorString("CYAN", "Cajero " + idEmpleado + " esperando a clientes para atender"));
@@ -39,5 +47,6 @@ public class Cajero implements Runnable {
                 this.caja.liberarCliente();
             }
         }
+        System.out.println(Console.colorString("BLACK", "\uD83C\uDFC4\uD83C\uDFC4 Cajero " + this.idEmpleado + " se toma vacaciones por siempre \uD83C\uDFC4\uD83C\uDFC4"));
     }
 }
