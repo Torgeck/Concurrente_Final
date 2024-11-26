@@ -1,6 +1,7 @@
 package hilos;
 
 import console.Console;
+import customExceptions.AeropuertoCerradoException;
 import pasivos.*;
 
 import java.util.Random;
@@ -32,14 +33,6 @@ public class Pasajero implements Runnable {
         return idPasajero;
     }
 
-    public Reserva getReserva() {
-        return reserva;
-    }
-
-    public void setReserva(Reserva reserva) {
-        this.reserva = reserva;
-    }
-
     public Aeropuerto getAeropuerto() {
         return aeropuerto;
     }
@@ -48,7 +41,10 @@ public class Pasajero implements Runnable {
         this.aeropuerto = aeropuerto;
     }
 
-    private void irTerminal() {
+    private void irTerminal() throws AeropuertoCerradoException {
+
+        this.aeropuerto.verificarAbierto();
+
         System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " entra a la terminal" + this.terminal.getId()));
         try {
             Thread.sleep(2000);
@@ -62,8 +58,8 @@ public class Pasajero implements Runnable {
         irPuertaEmbarque();
     }
 
-    private void irPuertaEmbarque() {
-
+    private void irPuertaEmbarque() throws AeropuertoCerradoException {
+        this.aeropuerto.verificarAbierto();
         if (!perdioVuelo()) {
             System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " esperando llamado para su vuelo"));
             this.reserva.getPuertaEmbarque().esperarEmbarque(this.reserva);
@@ -74,10 +70,12 @@ public class Pasajero implements Runnable {
     }
 
     private boolean perdioVuelo() {
-        return this.reloj.getTime() > this.reserva.getHoraEmbarque();
+        return this.reloj.getTiempoActual() > this.reserva.getHoraEmbarque();
     }
 
-    private void irFreeshop() {
+    private void irFreeshop() throws AeropuertoCerradoException {
+
+        this.aeropuerto.verificarAbierto();
 
         if (visitaFreeshop()) {
             this.freeshop = terminal.getFreeshop();
@@ -91,7 +89,6 @@ public class Pasajero implements Runnable {
             } catch (InterruptedException e) {
                 System.out.println(Console.colorString("RED", "ERROR con pasajero al comprar en freeshop"));
             }
-
             // Si el pasajero decidio comprar entonces entra a alguna caja
             if (compra) {
                 System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " decidio hacer compras en el freeshop"));
@@ -105,7 +102,7 @@ public class Pasajero implements Runnable {
         }
     }
 
-    private void irTren() {
+    private void irTren() throws AeropuertoCerradoException {
 
         this.terminal = this.reserva.getTerminal();
         System.out.println("Pasajero " + this.idPasajero + " se dirije al tren");
@@ -116,12 +113,13 @@ public class Pasajero implements Runnable {
             System.out.println("ERROR al ir al tren");
         }
 
-        aeropuerto.getTren().subirTren(this.idPasajero, reserva.getTerminal().getId());
-        aeropuerto.getTren().esperarEnTren(this.idPasajero);
-        aeropuerto.getTren().bajarTren(this.idPasajero, reserva.getTerminal().getId());
+        this.aeropuerto.getTren().subirTren(this.idPasajero, reserva.getTerminal().getId());
+        this.aeropuerto.getTren().esperarEnTren(this.idPasajero);
+        this.aeropuerto.getTren().bajarTren(this.idPasajero, reserva.getTerminal().getId());
     }
 
-    private void irPuestoAtencion(PuestoAtencion atencion) {
+    private void irPuestoAtencion(PuestoAtencion atencion) throws AeropuertoCerradoException {
+        this.aeropuerto.verificarAbierto();
         // Si no hay lugar en la cola entra a hall a esperar
         while (!atencion.entrarCola(this)) {
             try {
@@ -136,8 +134,8 @@ public class Pasajero implements Runnable {
         atencion.salirPuestoAtencion(this);
     }
 
-    private PuestoAtencion irInformes(PuestoAtencion atencion) {
-
+    private PuestoAtencion irInformes(PuestoAtencion atencion) throws AeropuertoCerradoException {
+        this.aeropuerto.verificarAbierto();
         try {
             // Se dirige al puesto de informes y obtiene el puesto de atencion
             atencion = aeropuerto.getPuestoInformes().obtenerPuestoAtencion(reserva.getEmpresa());
@@ -146,7 +144,7 @@ public class Pasajero implements Runnable {
                             + "]"));
             Thread.sleep(5000);
         } catch (Exception e) {
-            System.out.println("Le exploto la reserva en la cara a pasajero " + this.idPasajero);
+            System.out.println("ERROR al ir a puesto de informes, pasajero: " + this.idPasajero);
         }
         return atencion;
     }
@@ -166,8 +164,8 @@ public class Pasajero implements Runnable {
     public void run() {
         PuestoAtencion atencion = null;
         // Pasajero se dirije al puesto de informe para saber a que puesto de atencion dirigirse
-        if (this.aeropuerto.estaAbiertoAlPublico()) {
-            atencion = irInformes(atencion);
+        try {
+            atencion = irInformes(null);
 
             // Pasajero se dirije al puesto de antencion
             irPuestoAtencion(atencion);
@@ -179,8 +177,11 @@ public class Pasajero implements Runnable {
                 // Pasajero se dirije al tren
                 irTren();
                 // Pasajero se dirije a la terminal
+
                 irTerminal();
             }
+        } catch (AeropuertoCerradoException e) {
+            System.out.println(e.getMessage());
         }
     }
 }
