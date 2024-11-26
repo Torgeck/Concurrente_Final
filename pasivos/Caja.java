@@ -32,6 +32,11 @@ public class Caja {
         return idCaja;
     }
 
+    public void liberarCajero() {
+        mutexCajero.release();
+        mutexCliente.drainPermits();
+    }
+
     private void modificarCola(int x) {
         lock.lock();
         try {
