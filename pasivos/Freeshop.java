@@ -65,6 +65,12 @@ public class Freeshop {
             modificar.unlock();
         }
     }
+    
+    public void liberarCajeros() {
+        for (Caja caja : this.cajas) {
+            caja.liberarCajero();
+        }
+    }
 
     // Metodos pasajeros
     public boolean ingresarFreeshop() {
@@ -97,6 +103,4 @@ public class Freeshop {
         // Retorna la caja con menor fila
         return this.cajas[0].getCantClientes() <= this.cajas[1].getCantClientes() ? this.cajas[0] : this.cajas[1];
     }
-
-
 }
