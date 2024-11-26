@@ -5,6 +5,7 @@ import java.util.concurrent.Exchanger;
 import java.util.concurrent.Semaphore;
 
 import console.Console;
+import customExceptions.AeropuertoCerradoException;
 import estructuras.arbolAVL.ArbolAVL;
 import estructuras.lineales.Lista;
 import hilos.Empleado;
@@ -15,6 +16,7 @@ public class PuestoAtencion {
 
     private static int ID = 0;
     private int idPuesto;
+    private boolean estaCerrado;
     private Aeropuerto aeropuerto;
     private String aerolinea;
     private ArbolAVL vuelosAerolinea;
@@ -29,6 +31,7 @@ public class PuestoAtencion {
         this.aeropuerto = aeropuerto;
         this.aerolinea = aerolinea;
         this.idPuesto = generarID();
+        this.estaCerrado = false;
         this.exchanger = new Exchanger<>();
         this.colaDisponibilidad = new Semaphore(max, true);
         this.mostrador = new Semaphore(1, true);
@@ -41,7 +44,7 @@ public class PuestoAtencion {
     public String getAerolinea() {
         return this.aerolinea;
     }
-    
+
     public Aeropuerto getAeropuerto() {
         return this.aeropuerto;
     }
@@ -65,6 +68,16 @@ public class PuestoAtencion {
         }
     }
 
+    public void liberarEmpleado() {
+        this.estaCerrado = true;
+        mutexEmpleado.release();
+    }
+
+    public void abrirPuesto() {
+        mutexEmpleado.drainPermits();
+        this.estaCerrado = false;
+    }
+
     // Metodos empleado
     public void atenderPasajero(Empleado empleado) {
         Vuelo vueloObtenido;
@@ -74,15 +87,19 @@ public class PuestoAtencion {
                     + "] esperando pasajeros para atender"));
             mutexEmpleado.acquire();
 
-            vueloObtenido = obtenerVueloAleatorio(2);
-            if (vueloObtenido != null) {
-                reserva = new Reserva(vueloObtenido);
+            if (estaCerrado) {
+                System.out.println(Console.colorString("PURPLE", "Empleado " + empleado.getIdEmpleado() + " cierra puesto de atencion"));
             } else {
-                System.out.println(Console.colorString("RED", "NO HAY VUELOS DISPONIBLES EN" + this.aerolinea));
-            }
-            exchanger.exchange(reserva);
+                vueloObtenido = obtenerVueloAleatorio(2);
 
-            System.out.println(Console.colorString("PURPLE", "== Empleado[" + empleado.getIdEmpleado() + "] atendiendo pasajero =="));
+                if (vueloObtenido != null) {
+                    reserva = new Reserva(vueloObtenido);
+                } else {
+                    System.out.println(Console.colorString("RED", "NO HAY VUELOS DISPONIBLES EN " + this.aerolinea));
+                }
+                exchanger.exchange(reserva);
+                System.out.println(Console.colorString("PURPLE", "== Empleado[" + empleado.getIdEmpleado() + "] atendiendo pasajero =="));
+            }
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con empleado al querer atender al pasajero " + this.idPuesto + e.getMessage()));
             e.printStackTrace();
@@ -91,7 +108,6 @@ public class PuestoAtencion {
 
     public void liberarPasajero() {
         try {
-            // eliminarVuelosExpirados(2000);
             pasajeroListo.release();
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con empleado al querer liberar al pasajero"));
@@ -102,7 +118,7 @@ public class PuestoAtencion {
         Random random = new Random();
 
         int hora = Reloj.convertirHora(brechaTiempo);
-        int tiempoBase = this.aeropuerto.getReloj().getTime() + hora;
+        int tiempoBase = this.aeropuerto.getReloj().getTiempoActual() + hora;
         int tiempoMax = Reloj.convertirHora(22);
         Lista listaVuelos;
         Vuelo vueloObtenido = null;
@@ -117,12 +133,16 @@ public class PuestoAtencion {
         return vueloObtenido;
     }
 
+    public boolean hayPasajerosEsperando() {
+        return this.mostrador.hasQueuedThreads();
+    }
+
     public void eliminarVuelosExpirados(long brechaTiempo) {
         Lista listaExpirados;
         Vuelo vuelo;
 
         System.out.println(Console.colorString("WHITE", "Eliminando vuelos expirados"));
-        listaExpirados = vuelosAerolinea.listarRango(0, this.aeropuerto.getReloj().getTime() + brechaTiempo);
+        listaExpirados = vuelosAerolinea.listarRango(0, this.aeropuerto.getReloj().getTiempoActual() + brechaTiempo);
 
         while (!listaExpirados.esVacia()) {
             vuelo = (Vuelo) listaExpirados.recuperar(1);
@@ -132,13 +152,14 @@ public class PuestoAtencion {
     }
 
     // Metodos pasajero
-    public synchronized boolean entrarCola(Pasajero pasajero) {
+    public synchronized boolean entrarCola(Pasajero pasajero) throws AeropuertoCerradoException {
         boolean exito = true;
+        this.aeropuerto.verificarAbierto();
 
         try {
             if (colaDisponibilidad.tryAcquire()) {
                 System.out
-                        .println(Console.colorString("GREEN", pasajero.getIdPasajero() + " esperando en la cola en puesto de atencion["
+                        .println(Console.colorString("GREEN", "Pasajero " + pasajero.getIdPasajero() + " esperando en la cola en puesto de atencion["
                                 + this.aerolinea + "]"));
             } else {
                 exito = false;
@@ -151,8 +172,10 @@ public class PuestoAtencion {
         return exito;
     }
 
-    public Reserva esperarAtencion() {
+    public Reserva esperarAtencion() throws AeropuertoCerradoException {
         Reserva reserva = null;
+
+        this.aeropuerto.verificarAbierto();
         try {
             // Espero a que el empleado este desocupado
             mostrador.acquire();
@@ -160,7 +183,7 @@ public class PuestoAtencion {
             // Obtengo mis datos de vuelo
             reserva = this.exchanger.exchange(null);
         } catch (Exception e) {
-            System.out.println(Console.colorString("RED", "ERROR con pasajero en el mostrador"));
+            System.out.println(Console.colorString("RED", "Le avisaron al pasajero que cerro el Aeropuerto"));
         }
         return reserva;
     }
