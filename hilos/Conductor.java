@@ -19,9 +19,11 @@ public class Conductor implements Runnable {
     public void run() {
         int terminalActual;
 
-        while (this.aeropuerto.getReloj().getDiaActual() < 7) {
+        while (!this.aeropuerto.estaCerrado()) {
 
-            if (!this.aeropuerto.estaAbiertoAlPublico()) {
+            if (this.aeropuerto.estaCerradoAlPublico()) {
+                System.out.println(Console.colorString("YELLOW", "Conductor notifica pasajeros esperando que cerro el aeropuerto"));
+                this.tren.avisarPasajerosCierre();
                 System.out.println(Console.colorString("WHITE", "Conductor, Aeropuerto cerrado me voy a casa"));
                 this.aeropuerto.esperarApertura();
             } else {
@@ -35,7 +37,7 @@ public class Conductor implements Runnable {
                         Thread.sleep(this.tiempoViaje);
                         tren.avisarPasajerosParada();
                     } catch (Exception e) {
-                        System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
+                        System.out.println(Console.colorString("RED", "ERROR al ir a una terminal"));
                     }
                     tren.esperarDesembarquePasajeros();
                     terminalActual++;
@@ -43,13 +45,13 @@ public class Conductor implements Runnable {
 
                 tren.irAeropuerto();
                 try {
-                    // Antes simulaba tiempoViaje * 3
                     Thread.sleep(this.tiempoViaje);
                 } catch (InterruptedException e) {
-                    System.out.println(Console.colorString("RED", "ERROR exploto el tren"));
+                    System.out.println(Console.colorString("RED", "ERROR al volver a aeropuerto"));
                 }
             }
         }
+        System.out.println(Console.colorString("BLACK", "\uD83C\uDFC4\uD83C\uDFC4 Conductor se toma vacaciones por siempre \uD83C\uDFC4\uD83C\uDFC4"));
     }
 }
 
