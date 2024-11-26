@@ -12,30 +12,34 @@ public class Main {
         List<String> empresas = List.of("Aerolineas", "FlyBondi", "Latam", "Pepinho");
         int cantPuestos = empresas.size();
         int capacidadMax = 5;
-        int cantPasajeros = 50;
         int cantCajas = 6;
         int cantPuestosEmbarque = 20;
-        Reloj reloj = new Reloj();
-        Random rand = new Random();
-        Tren tren = new Tren(10);
-        Aeropuerto ar = new Aeropuerto(empresas, capacidadMax, tren, reloj);
+        int cantDiasSimulacion = 2;
+        int capacidadTren = 10;
+        int cantPasajeros = 20;
+        int segundos = 20;
+        Reloj reloj = new Reloj(cantDiasSimulacion);
+        Aeropuerto ar = new Aeropuerto(empresas, capacidadMax, reloj, capacidadTren);
+        CreadorPasajeros creadorPasajeros = new CreadorPasajeros(segundos, cantPasajeros, cantDiasSimulacion, reloj, ar);
         reloj.setAeropuerto(ar);
         Thread threadReloj = new Thread(reloj);
-        Thread conductor = new Thread(new Conductor(tren, ar));
-        Thread[] pasajeros = new Thread[cantPasajeros];
+        Thread pasajeros = new Thread(creadorPasajeros);
+        Thread conductor = new Thread(new Conductor(ar.getTren(), ar));
+        Thread guardia = new Thread(ar.getGuardia());
         Thread[] empleados = new Thread[cantPuestos];
         Thread[] cajeros = new Thread[cantCajas];
         Thread[] empEmbarque = new Thread[cantPuestosEmbarque];
         HashMap<String, PuestoAtencion> puestos = ar.getHashPuestoAtencion();
         HashMap<Character, Terminal> terminales = ar.getHashTerminal();
 
-        new Thread(ar.getGuardia()).start();
-        conductor.start();
 
+        guardia.start();
+        conductor.start();
         threadReloj.start();
+        pasajeros.start();
         inicializarEmpleadosTerminal(terminales, cajeros, empEmbarque, ar);
-        inicializarPasajeros(pasajeros, ar, empresas, rand, cantPuestos);
         inicializarEmpleadosPuestos(empleados, puestos, empresas);
+
 
     }
 
@@ -64,13 +68,6 @@ public class Main {
                 empEmbarque[indiceEmpleado] = new Thread(new EmpleadoEmbarque(puestosEmbarque.get(indicePuerta), ar));
                 empEmbarque[indiceEmpleado].start();
             }
-        }
-    }
-
-    private static void inicializarPasajeros(Thread[] pasajeros, Aeropuerto ar, List<String> empresas, Random rand, int cantPuestos) {
-        for (int i = 0; i < pasajeros.length; i++) {
-            pasajeros[i] = new Thread(new Pasajero(ar, empresas.get(rand.nextInt(cantPuestos))));
-            pasajeros[i].start();
         }
     }
 
