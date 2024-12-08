@@ -3,6 +3,7 @@ package pasivos;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import console.Console;
 import customExceptions.AeropuertoCerradoException;
@@ -12,7 +13,7 @@ import hilos.Reloj;
 
 public class Aeropuerto {
 
-    private static final char[] arregloTerminales = {'A', 'B', 'C'};
+    private static final char[] arregloTerminales = { 'A', 'B', 'C' };
     private Reloj reloj;
     private PuestoInformes puestoInformes;
     private HashMap<String, PuestoAtencion> hashPuestoAtencion;
@@ -22,7 +23,8 @@ public class Aeropuerto {
     private HashMap<String, Lista> hashVuelos;
     private List<String> empresas;
     private Tren tren;
-    private boolean flagCerrado;
+    private AtomicBoolean flagFinSimulacion;
+    private AtomicBoolean flagCerrado;
 
     public Aeropuerto(List<String> empresas, int capMaxPuestos, Reloj reloj, int capMaxTren) {
         // generar aeropuerto
@@ -34,7 +36,8 @@ public class Aeropuerto {
         this.guardia = new Guardia(this);
         this.hashTerminal = new HashMap<>();
         this.tren = new Tren(this, capMaxTren);
-        this.flagCerrado = false;
+        this.flagFinSimulacion = new AtomicBoolean(false);
+        this.flagCerrado = new AtomicBoolean(false);
         inicializarHashVuelos();
         generarTerminales();
         generarVuelos();
@@ -77,8 +80,12 @@ public class Aeropuerto {
         return this.reloj;
     }
 
-    public synchronized boolean estaCerrado() {
-        return this.flagCerrado;
+    public synchronized boolean getFlagSimulacion() {
+        return this.flagFinSimulacion.get();
+    }
+
+    public void cambiarFlagCerrado(boolean nuevaFlag) {
+        this.flagCerrado.set(nuevaFlag);
     }
 
     public void generarPuestosAtencion(List<String> empresas, int capacidadMax) {
@@ -133,6 +140,14 @@ public class Aeropuerto {
         lista.insertarInicio(vuelo);
     }
 
+    public int getHora() {
+        return this.reloj.getTiempoActual();
+    }
+
+    public void agregarAlarma(Alarma alarma) {
+        this.reloj.agregarAlarma(alarma);
+    }
+
     public Terminal getTerminalRandom() {
         Random rand = new Random();
         Terminal terminal = hashTerminal.get(arregloTerminales[rand.nextInt(3)]);
@@ -140,8 +155,7 @@ public class Aeropuerto {
     }
 
     public synchronized boolean estaCerradoAlPublico() {
-        int horaActual = this.reloj.getTiempoActual();
-        return this.flagCerrado || (horaActual >= 2200) || (horaActual < 600);
+        return this.flagFinSimulacion.get() || this.flagCerrado.get();
     }
 
     public void verificarAbierto() throws AeropuertoCerradoException {
@@ -155,6 +169,10 @@ public class Aeropuerto {
         notifyAll();
     }
 
+    public synchronized void avisarCierre() {
+        notifyAll();
+    }
+
     public synchronized void esperarApertura() {
         try {
             wait();
@@ -164,43 +182,33 @@ public class Aeropuerto {
         }
     }
 
-    public void nuevoDia() {
+    private void nuevoDia() {
         inicializarHashVuelos();
         generarVuelos();
-    }
-
-    public void liberarCajeros() {
         this.hashTerminal.forEach((k, terminal) -> {
-            terminal.getFreeshop().liberarCajeros();
+            terminal.nuevoDia();
         });
-    }
-
-    private void liberarEmpleadosPuesto() {
-        this.hashPuestoAtencion.forEach((k, puesto) -> {
-            puesto.liberarEmpleado();
-        });
-    }
-
-    public void cerrarPermanente() {
-        this.flagCerrado = true;
-        cerrarAeropuerto();
-    }
-
-    private void cerrarAeropuerto() {
-        liberarCajeros();
-        liberarEmpleadosPuesto();
-        liberarConductor();
     }
 
     private void liberarConductor() {
         this.tren.liberarConductor();
     }
 
-    public int getHora() {
-        return this.reloj.getTiempoActual();
+    public void cerrarPermanente() {
+        this.flagFinSimulacion.set(true);
+        avisarCierre();
+        cerrarAeropuerto();
     }
 
-    public void agregarAlarma(Alarma alarma) {
-        this.reloj.agregarAlarma(alarma);
+    public void cerrarAeropuerto() {
+        liberarConductor();
+        liberarEmpleadosEmbarque();
     }
+
+    private void liberarEmpleadosEmbarque() {
+        this.hashTerminal.forEach((k, terminal) -> {
+            terminal.liberarEmpleadosEmbarque();
+        });
+    }
+
 }
