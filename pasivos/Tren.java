@@ -3,6 +3,7 @@ package pasivos;
 import console.Console;
 import customExceptions.AeropuertoCerradoException;
 
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -47,16 +48,16 @@ public class Tren {
         lock.lock();
         try {
             int indice = getIndiceTerminal(terminal);
-            this.capacidadActual.incrementAndGet();
             this.gruposTerminal[indice]++;
 
-            if (capacidadActual.get() == capacidadMax) {
+            if (capacidadActual.incrementAndGet() == capacidadMax) {
                 flagEnViaje.set(true);
                 enViaje.signal();
             } else {
                 enAeropuerto.signal();
             }
-            System.out.println(Console.colorString("YELLOW", "CAPACIDAD ACTUAL DEL TREN: [" + this.gruposTerminal[0] + "|" + this.gruposTerminal[1] + "|" + this.gruposTerminal[2] + "] = " + this.capacidadActual));
+            System.out.println(Console.colorString("YELLOW", "CAPACIDAD ACTUAL DEL TREN: [" + this.gruposTerminal[0]
+                    + "|" + this.gruposTerminal[1] + "|" + this.gruposTerminal[2] + "] = " + this.capacidadActual));
         } finally {
             lock.unlock();
         }
@@ -110,12 +111,14 @@ public class Tren {
         try {
             while (!flagEnAeropuerto.get()) {
                 this.aeropuerto.verificarAbierto();
-                System.out.println(Console.colorString("WHITE", "Pasajero " + idPasajero + " esperando el tren \uD83D\uDC40⏳\uD83E\uDD71"));
+                System.out.println(Console.colorString("WHITE",
+                        "Pasajero " + idPasajero + " esperando el tren \uD83D\uDC40⏳\uD83E\uDD71"));
                 enAeropuerto.await();
             }
             this.aeropuerto.verificarAbierto();
             // Ocupa lugar para su terminal
-            System.out.println(Console.colorString("GREEN", "Pasajero " + idPasajero + " embarco el tren \uD83D\uDE89\uD83C\uDFC3"));
+            System.out.println(Console.colorString("GREEN",
+                    "Pasajero " + idPasajero + " embarco el tren \uD83D\uDE89\uD83C\uDFC3"));
             ocuparLugar(terminal);
         } catch (InterruptedException e) {
             System.out.println(Console.colorString("RED", "ERROR con pasajero al querer subir al tren"));
@@ -124,12 +127,17 @@ public class Tren {
         }
     }
 
-    public void esperarEnTren(int idPasajero) {
+    public void esperarEnTren(int idPasajero) throws AeropuertoCerradoException {
         try {
-            System.out.println(Console.colorString("GREEN", "Pasajero " + idPasajero + " esperando que el tren arranque"));
+            System.out.println(
+                    Console.colorString("GREEN", "Pasajero " + idPasajero + " esperando que el tren arranque"));
             barreraEmbarque.await();
-        } catch (Exception e) {
-            System.out.println(Console.colorString("RED", "ERROR con pasajero dentro del tren"));
+        } catch (BrokenBarrierException e) {
+            System.out.println(
+                    Console.colorString("RED", "Pasajero " + idPasajero + " bajo del tren por cierre de aeropuerto"));
+            throw new AeropuertoCerradoException("Aeropuerto cerrado");
+        } catch (InterruptedException e) {
+            System.out.println(Console.colorString("RED", "ERROR al esperar en tren"));
         }
     }
 
@@ -151,16 +159,18 @@ public class Tren {
     }
 
     // Metodos Conductor
-    public void esperarEnAeropuerto() {
+    public void esperarEnAeropuerto() throws AeropuertoCerradoException {
         lock.lock();
         try {
             flagEnViaje.set(false);
             flagEnAeropuerto.set(true);
-            System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83 El tren se esta esperando en el aeropuerto"));
+            System.out
+                    .println(Console.colorString("YELLOW", "\uD83D\uDE83 El tren se esta esperando en el aeropuerto"));
             enAeropuerto.signal();
             enViaje.await();
+            this.aeropuerto.verificarAbierto();
             flagEnAeropuerto.set(false);
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             System.out.println(Console.colorString("RED", "ERROR exploto el tren en el aeropuerto"));
         } finally {
             lock.unlock();
@@ -171,7 +181,8 @@ public class Tren {
         lock.lock();
         try {
             flagEnViaje.set(true);
-            System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83 El tren esta saliendo de la terminal: " + terminalActual + "\uD83D\uDE8F"));
+            System.out.println(Console.colorString("YELLOW",
+                    "\uD83D\uDE83 El tren esta saliendo de la terminal: " + terminalActual + "\uD83D\uDE8F"));
             actualizarTerminal();
 
         } catch (Exception e) {
@@ -184,7 +195,8 @@ public class Tren {
     public void avisarPasajerosParada() {
         lock.lock();
         try {
-            System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83\uD83D\uDE8F El tren llego a la terminal: " + terminalActual + " avisa los pasajeros \uD83D\uDD0A"));
+            System.out.println(Console.colorString("YELLOW", "\uD83D\uDE83\uD83D\uDE8F El tren llego a la terminal: "
+                    + terminalActual + " avisa los pasajeros \uD83D\uDD0A"));
             flagEnViaje.set(false);
             enViaje.signalAll();
 
@@ -208,12 +220,9 @@ public class Tren {
     public void irAeropuerto() {
         lock.lock();
         try {
-            System.out.println(Console.colorString("YELLOW", "\uD83D\uDE85 El tren esta volviendo al Aeropuerto \uD83D\uDEC4 "));
-            terminalActual = 'Q';
-            barreraEmbarque.reset();
-            this.gruposTerminal = new int[3];
-            this.capacidadActual.set(0);
-            this.flagEnViaje.compareAndSet(false, true);
+            System.out.println(
+                    Console.colorString("YELLOW", "\uD83D\uDE85 El tren esta volviendo al Aeropuerto \uD83D\uDEC4 "));
+            reset();
             enAeropuerto.signal();
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR con el tren al querer ir al aeropuerto"));
@@ -222,11 +231,22 @@ public class Tren {
         }
     }
 
+    public void reset() {
+        terminalActual = 'Q';
+        barreraEmbarque.reset();
+        this.gruposTerminal = new int[3];
+        this.capacidadActual.set(0);
+        this.flagEnViaje.compareAndSet(false, true);
+    }
+
     public void avisarPasajerosCierre() {
         // Metodo que nofitica a los pasajeros esperando el tren que el aeropuerto cerro
         lock.lock();
         try {
+            // Los que estan esperando en aeropuerto
             enAeropuerto.signalAll();
+            // Los que estan esperando arriba del tren
+            barreraEmbarque.reset();
         } catch (Exception e) {
             System.out.println(e.getMessage());
         } finally {
