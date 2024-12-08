@@ -12,6 +12,7 @@ public class Reloj implements Runnable {
     private final AtomicInteger dia;
     private final AtomicInteger horaActual;
     private final AtomicInteger minutoActual;
+    private boolean aeropuertoCerrado;
     private PriorityBlockingQueue<Alarma> alarms;
     private Aeropuerto aeropuerto;
     private final int diaFinal;
@@ -21,6 +22,7 @@ public class Reloj implements Runnable {
         this.dia = new AtomicInteger(1);
         this.horaActual = new AtomicInteger(6);
         this.minutoActual = new AtomicInteger(0);
+        this.aeropuertoCerrado = false;
         this.alarms = new PriorityBlockingQueue<>();
     }
 
@@ -67,9 +69,10 @@ public class Reloj implements Runnable {
     }
 
     public static int convertirHora(int hora, int minutos) {
-        /* Metodo que devuelve la hora en formato hhmm.
-        i.e: hora = 4; minutos = 40 => 440
-        */
+        /*
+         * Metodo que devuelve la hora en formato hhmm.
+         * i.e: hora = 4; minutos = 40 => 440
+         */
         int minAux = minutos, horaAux = hora;
 
         if (minAux >= 60) {
@@ -85,9 +88,10 @@ public class Reloj implements Runnable {
     }
 
     public static int convertirHora(int hora) {
-        /* Metodo que devuelve la hora en formato hhmm.
-        i.e: hora = 4 => 400
-        */
+        /*
+         * Metodo que devuelve la hora en formato hhmm.
+         * i.e: hora = 4 => 400
+         */
         int horaAux = hora;
 
         if (horaAux > 24) {
@@ -123,18 +127,35 @@ public class Reloj implements Runnable {
 
     private void checkApertura() {
         if (this.getTiempoActual() == 600) {
+            this.aeropuertoCerrado = false;
+            this.aeropuerto.cambiarFlagCerrado(this.aeropuertoCerrado);
             this.aeropuerto.avisarApertura();
+        }
+    }
+
+    private void checkCierre() {
+        if (this.getTiempoActual() == 2200) {
+            this.aeropuertoCerrado = true;
+            this.aeropuerto.cambiarFlagCerrado(this.aeropuertoCerrado);
+            this.aeropuerto.cerrarAeropuerto();
         }
     }
 
     public void run() {
         while (this.dia.get() <= this.diaFinal) {
             try {
-                System.out.println(Console.colorString("BLUE", "Tiempo actual " + this.horaActual.get() + ":" + this.minutoActual.get()));
+                System.out.println(Console.colorString("BLUE",
+                        String.format("Tiempo actual %02d:%02d", this.horaActual.get(), this.minutoActual.get())));
                 Thread.sleep(1000);
                 incrementarTiempo(15);
-                checkAlarma();
-                checkApertura();
+
+                if (aeropuertoCerrado) {
+                    checkApertura();
+                } else {
+                    checkAlarma();
+                    checkCierre();
+                }
+
             } catch (Exception e) {
                 System.out.println(Console.colorString("RED", "ERROR exploto RELOJ"));
                 e.printStackTrace();
@@ -143,6 +164,5 @@ public class Reloj implements Runnable {
         // Cierra el aeropuerto
         System.out.println(Console.colorString("RED", "CERRO AEROPUERTO"));
         this.aeropuerto.cerrarPermanente();
-        this.aeropuerto.avisarApertura();
     }
 }
