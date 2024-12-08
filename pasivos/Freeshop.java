@@ -21,7 +21,7 @@ public class Freeshop {
         this.cajas = new Caja[cantCajas];
         this.capMax = capMax;
         this.capActual = 0;
-        this.semCapacidad = new Semaphore(capMax);  // No necesita ser fair
+        this.semCapacidad = new Semaphore(capMax); // No necesita ser fair
         this.random = new Random();
         this.modificar = new ReentrantLock();
         iniCajas();
@@ -41,34 +41,16 @@ public class Freeshop {
     }
 
     // Metodos para modificar y checkear variables
-    private int getCapActual() {
-        int respuesta = -1;
-        modificar.lock();
-        try {
-            respuesta = capActual;
-        } catch (Exception e) {
-            System.out.println("ERROR al querer acceder a la variable capActual en Freeshop");
-        } finally {
-            modificar.unlock();
-        }
-        return respuesta;
-    }
-
     private void modificarCapActual(int x) {
         modificar.lock();
         try {
             this.capActual += x;
-            System.out.println(Console.colorString("PURPLE", "CAPACIDAD ACTUAL FS" + this.idFreeshop + ": " + this.capActual + " DE MAXIMO: " + this.capMax));
+            System.out.println(Console.colorString("PURPLE",
+                    "CAPACIDAD ACTUAL FS" + this.idFreeshop + ": " + this.capActual + " DE MAXIMO: " + this.capMax));
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR al querer aumentar capActual en Freeshop"));
         } finally {
             modificar.unlock();
-        }
-    }
-    
-    public void liberarCajeros() {
-        for (Caja caja : this.cajas) {
-            caja.liberarCajero();
         }
     }
 
