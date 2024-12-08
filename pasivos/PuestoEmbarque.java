@@ -1,6 +1,7 @@
 package pasivos;
 
 import console.Console;
+import customExceptions.AeropuertoCerradoException;
 
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
@@ -69,7 +70,7 @@ public class PuestoEmbarque {
             this.terminal.agregarAlarma(new Alarma(vuelos.getFirst().getHoraEmbarque(), this));
             esperarAlarma.await();
         } catch (Exception e) {
-            System.out.println(Console.colorString("RED", "ERROR al querer poner alarma"));
+            System.out.println(Console.colorString("RED", "ERROR al esperar alarma en puesto embarque"));
         } finally {
             lock.unlock();
         }
@@ -79,23 +80,62 @@ public class PuestoEmbarque {
         lock.lock();
         try {
             vuelos.removeFirst();
-            esperarEmbarque.signalAll();
         } catch (NoSuchElementException e) {
-            System.out.println(Console.colorString("RED", "ERROR al querer sacar elemeto de cola vuelo"));
+            System.out.println(
+                    Console.colorString("RED", "ERROR al querer sacar elemento de cola vuelo en puesto de embarque"));
+        } finally {
+            esperarEmbarque.signalAll();
+            lock.unlock();
+        }
+    }
+
+    public void avisarPasajerosCierre() {
+        lock.lock();
+        try {
             esperarEmbarque.signalAll();
         } finally {
             lock.unlock();
         }
     }
 
-    public void esperarEmbarque(Reserva reserva) {
+    public boolean esperarEmbarque(Reserva reserva) throws AeropuertoCerradoException {
+        boolean embarco = false;
         lock.lock();
         try {
-            while (!this.vueloActual.getIdVuelo().equals(reserva.getVueloID()) || (this.terminal.getTiempoActual() != reserva.getHoraEmbarque())) {
-                esperarEmbarque.await();
+            while (!this.vueloActual.getIdVuelo().equals(reserva.getVueloID())
+                    && !this.terminal.getAeropuerto().estaCerradoAlPublico() && !embarco) {
+
+                this.terminal.getAeropuerto().verificarAbierto();
+
+                if (reserva.getHoraEmbarque() < this.terminal.getTiempoActual()) {
+                    esperarEmbarque.await();
+                }
+                if (reserva.getHoraEmbarque() == this.terminal.getTiempoActual()
+                        && this.vueloActual.getIdVuelo().equals(reserva.getVueloID())) {
+                    embarco = true;
+                } else {
+                    // Perdio el vuelo
+                    throw new AeropuertoCerradoException("Aeropuerto cerrado");
+                }
             }
-        } catch (Exception e) {
+        } catch (InterruptedException e) {
             System.out.println(Console.colorString("RED", "ERROR al esperar embarque"));
+        } finally {
+            lock.unlock();
+        }
+        return embarco;
+    }
+
+    public void esperarCierre() {
+        this.terminal.esperarCierre();
+    }
+
+    public void liberarEmpleado() {
+        lock.lock();
+        try {
+            esperarAlarma.signal();
+        } catch (Exception e) {
+            System.out.println("ERROR al querer liberar empleadoEmbarque");
         } finally {
             lock.unlock();
         }
