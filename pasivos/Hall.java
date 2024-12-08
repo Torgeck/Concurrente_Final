@@ -2,8 +2,6 @@ package pasivos;
 
 public class Hall {
 
-    private Aeropuerto aeropuerto;
-
     public Hall() {
     }
 

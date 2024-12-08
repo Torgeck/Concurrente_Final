@@ -3,6 +3,7 @@ package pasivos;
 import console.Console;
 
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class Caja {
@@ -60,7 +61,8 @@ public class Caja {
     public void esperarAtencion(String pasajero) {
         modificarCola(1);
         try {
-            System.out.println(Console.colorString("PURPLE", "Pasajero " + pasajero + " esperando en fila caja " + this.idCaja));
+            System.out.println(
+                    Console.colorString("PURPLE", "Pasajero " + pasajero + " esperando en fila caja " + this.idCaja));
             mutexAtencion.acquire();
             mutexCajero.release();
         } catch (InterruptedException e) {
@@ -80,12 +82,14 @@ public class Caja {
     }
 
     // Metodos Cajero
-    public void atenderCliente() {
+    public boolean atenderCliente() {
+        boolean respuesta = false;
         try {
-            mutexCajero.acquire();
+            respuesta = mutexCajero.tryAcquire(4, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             System.out.println(Console.colorString("RED", "ERROR al atender cliente en caja " + this.idCaja));
         }
+        return respuesta;
     }
 
     public void liberarCliente() {
@@ -95,6 +99,5 @@ public class Caja {
             System.out.println(Console.colorString("RED", "ERROR al liberar cliente en caja " + this.idCaja));
         }
     }
-
 
 }
