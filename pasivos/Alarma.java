@@ -1,7 +1,5 @@
 package pasivos;
 
-import java.util.concurrent.locks.Condition;
-
 public class Alarma implements Comparable<Alarma> {
 
     private int tiempo;
