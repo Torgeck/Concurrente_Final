@@ -1,5 +1,4 @@
 import java.util.ArrayList;
-import java.util.Random;
 
 import hilos.*;
 import pasivos.*;
@@ -20,7 +19,8 @@ public class Main {
         int segundos = 20;
         Reloj reloj = new Reloj(cantDiasSimulacion);
         Aeropuerto ar = new Aeropuerto(empresas, capacidadMax, reloj, capacidadTren);
-        CreadorPasajeros creadorPasajeros = new CreadorPasajeros(segundos, cantPasajeros, cantDiasSimulacion, reloj, ar);
+        CreadorPasajeros creadorPasajeros = new CreadorPasajeros(segundos, cantPasajeros, cantDiasSimulacion, reloj,
+                ar);
         reloj.setAeropuerto(ar);
         Thread threadReloj = new Thread(reloj);
         Thread pasajeros = new Thread(creadorPasajeros);
@@ -32,7 +32,6 @@ public class Main {
         HashMap<String, PuestoAtencion> puestos = ar.getHashPuestoAtencion();
         HashMap<Character, Terminal> terminales = ar.getHashTerminal();
 
-
         guardia.start();
         conductor.start();
         threadReloj.start();
@@ -40,11 +39,10 @@ public class Main {
         inicializarEmpleadosTerminal(terminales, cajeros, empEmbarque, ar);
         inicializarEmpleadosPuestos(empleados, puestos, empresas);
 
-
     }
 
-
-    private static void inicializarEmpleadosTerminal(HashMap<Character, Terminal> terminales, Thread[] cajeros, Thread[] empEmbarque, Aeropuerto ar) {
+    private static void inicializarEmpleadosTerminal(HashMap<Character, Terminal> terminales, Thread[] cajeros,
+            Thread[] empEmbarque, Aeropuerto ar) {
         int indiceCajero = 0;
         int indiceEmpleado = 0;
         for (int i = 0; i < 3; i++) {
@@ -71,7 +69,8 @@ public class Main {
         }
     }
 
-    private static void inicializarEmpleadosPuestos(Thread[] empleados, HashMap<String, PuestoAtencion> puestos, List<String> empresas) {
+    private static void inicializarEmpleadosPuestos(Thread[] empleados, HashMap<String, PuestoAtencion> puestos,
+            List<String> empresas) {
         Empleado emp;
         PuestoAtencion puesto;
         for (int i = 0; i < empleados.length; i++) {
