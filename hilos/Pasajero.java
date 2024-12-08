@@ -45,7 +45,8 @@ public class Pasajero implements Runnable {
 
         this.aeropuerto.verificarAbierto();
 
-        System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " entra a la terminal" + this.terminal.getId()));
+        System.out.println(Console.colorString("GREEN",
+                "Pasajero " + this.idPasajero + " entra a la terminal" + this.terminal.getId()));
         try {
             Thread.sleep(2000);
         } catch (InterruptedException e) {
@@ -59,13 +60,25 @@ public class Pasajero implements Runnable {
     }
 
     private void irPuertaEmbarque() throws AeropuertoCerradoException {
+        boolean embarco;
         this.aeropuerto.verificarAbierto();
         if (!perdioVuelo()) {
-            System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " esperando llamado para su vuelo"));
-            this.reserva.getPuertaEmbarque().esperarEmbarque(this.reserva);
-            System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " embarco vuelo: [" + this.reserva.getVueloID() + " | " + this.reserva.getHoraEmbarque() + "]"));
+            System.out.println(
+                    Console.colorString("GREEN", "Pasajero " + this.idPasajero + " esperando llamado para su vuelo"));
+            embarco = this.reserva.getPuertaEmbarque().esperarEmbarque(this.reserva);
+            if (embarco) {
+                System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " embarco vuelo: ["
+                        + this.reserva.getVueloID() + " | " + this.reserva.getHoraEmbarque() + "]"));
+            } else {
+                System.out.println(Console.colorString("RED",
+                        "\uD83E\uDD21\uD83E\uDD21 Pasajero " + this.idPasajero + " perdio su vuelo: ["
+                                + this.reserva.getVueloID() + " | " + this.reserva.getHoraEmbarque() + "]"));
+
+            }
         } else {
-            System.out.println(Console.colorString("RED", "\uD83E\uDD21\uD83E\uDD21 Pasajero " + this.idPasajero + " perdio su vuelo: [" + this.reserva.getVueloID() + " | " + this.reserva.getHoraEmbarque() + "]"));
+            System.out.println(Console.colorString("RED",
+                    "\uD83E\uDD21\uD83E\uDD21 Pasajero " + this.idPasajero + " perdio su vuelo: ["
+                            + this.reserva.getVueloID() + " | " + this.reserva.getHoraEmbarque() + "]"));
         }
     }
 
@@ -79,7 +92,8 @@ public class Pasajero implements Runnable {
 
         if (visitaFreeshop()) {
             this.freeshop = terminal.getFreeshop();
-            System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " quiere entrar al freeshop"));
+            System.out.println(
+                    Console.colorString("GREEN", "Pasajero " + this.idPasajero + " quiere entrar al freeshop"));
             boolean compra = this.freeshop.ingresarFreeshop();
             System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " entro al freeshop"));
 
@@ -91,7 +105,8 @@ public class Pasajero implements Runnable {
             }
             // Si el pasajero decidio comprar entonces entra a alguna caja
             if (compra) {
-                System.out.println(Console.colorString("GREEN", "Pasajero " + this.idPasajero + " decidio hacer compras en el freeshop"));
+                System.out.println(Console.colorString("GREEN",
+                        "Pasajero " + this.idPasajero + " decidio hacer compras en el freeshop"));
                 Caja caja = this.freeshop.getCajaMenosOcupada();
                 caja.esperarAtencion(String.valueOf(this.idPasajero));
                 caja.salirCaja(String.valueOf(this.idPasajero));
@@ -123,7 +138,8 @@ public class Pasajero implements Runnable {
         // Si no hay lugar en la cola entra a hall a esperar
         while (!atencion.entrarCola(this)) {
             try {
-                System.out.println(Console.colorString("WHITE", "Pasajero " + this.idPasajero + " esperando en hall \uD83D\uDCA4\uD83D\uDCA4"));
+                System.out.println(Console.colorString("WHITE",
+                        "Pasajero " + this.idPasajero + " esperando en hall \uD83D\uDCA4\uD83D\uDCA4"));
                 aeropuerto.getHall().esperarEnHall();
             } catch (Exception e) {
                 System.out.println("ERROR al esperar en hall");
@@ -163,7 +179,8 @@ public class Pasajero implements Runnable {
 
     public void run() {
         PuestoAtencion atencion = null;
-        // Pasajero se dirije al puesto de informe para saber a que puesto de atencion dirigirse
+        // Pasajero se dirije al puesto de informe para saber a que puesto de atencion
+        // dirigirse
         try {
             atencion = irInformes(null);
 
@@ -172,7 +189,8 @@ public class Pasajero implements Runnable {
 
             if (this.reserva == null) {
                 // En caso de no haber vuelos se va del aeropuerto
-                System.out.println(Console.colorString("BLACK", "\uD83D\uDC80\uD83D\uDC80 Me voy del aeropuerto, no quedan vuelos \uD83D\uDC80\uD83D\uDC80"));
+                System.out.println(Console.colorString("BLACK",
+                        "\uD83D\uDC80\uD83D\uDC80 Me voy del aeropuerto, no quedan vuelos \uD83D\uDC80\uD83D\uDC80"));
             } else {
                 // Pasajero se dirije al tren
                 irTren();
