@@ -102,15 +102,12 @@ public class PuestoEmbarque {
         boolean embarco = false;
         lock.lock();
         try {
-            while (!this.vueloActual.getIdVuelo().equals(reserva.getVueloID())
-                    && !this.terminal.getAeropuerto().estaCerradoAlPublico() && !embarco) {
-
+            while (!embarco) {
                 this.terminal.getAeropuerto().verificarAbierto();
 
-                if (reserva.getHoraEmbarque() < this.terminal.getTiempoActual()) {
+                if (reserva.getHoraEmbarque() > this.terminal.getTiempoActual()) {
                     esperarEmbarque.await();
-                }
-                if (reserva.getHoraEmbarque() == this.terminal.getTiempoActual()
+                } else if (reserva.getHoraEmbarque() == this.terminal.getTiempoActual()
                         && this.vueloActual.getIdVuelo().equals(reserva.getVueloID())) {
                     embarco = true;
                 } else {
