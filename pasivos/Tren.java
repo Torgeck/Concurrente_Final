@@ -14,13 +14,14 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Tren {
 
+    private static final int CANT_TERMINALES = 3;
     private Aeropuerto aeropuerto;
-    private int[] gruposTerminal;
-    private int capacidadMax;
     private AtomicInteger capacidadActual;
-    private char terminalActual;
     private AtomicBoolean flagEnViaje;
     private AtomicBoolean flagEnAeropuerto;
+    private int[] gruposTerminal;
+    private int capacidadMax;
+    private char terminalActual;
     private Lock lock;
     private Lock lockTerminal;
     private Condition enViaje;
@@ -39,7 +40,7 @@ public class Tren {
         this.enViaje = lock.newCondition();
         this.enAeropuerto = lock.newCondition();
         this.terminalActual = 'Q';
-        this.gruposTerminal = new int[3];
+        this.gruposTerminal = new int[CANT_TERMINALES];
         this.barreraEmbarque = new CyclicBarrier(capacidad);
     }
 
@@ -64,13 +65,12 @@ public class Tren {
     }
 
     private int getIndiceTerminal(char terminal) {
-        int indice = switch (terminal) {
+        return switch (terminal) {
             case 'C' -> 0;
             case 'B' -> 1;
             case 'A' -> 2;
             default -> -1;
         };
-        return indice;
     }
 
     private char getTerminalSiguiente(char terminal) {
@@ -234,9 +234,9 @@ public class Tren {
     public void reset() {
         terminalActual = 'Q';
         barreraEmbarque.reset();
-        this.gruposTerminal = new int[3];
+        this.gruposTerminal = new int[CANT_TERMINALES];
         this.capacidadActual.set(0);
-        this.flagEnViaje.compareAndSet(false, true);
+        this.flagEnViaje.set(true);
     }
 
     public void avisarPasajerosCierre() {
