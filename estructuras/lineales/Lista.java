@@ -313,7 +313,7 @@ public class Lista {
         int indice = 1;
 
         while (aux != null) {
-            salida.append(indice + " - " + aux.getElemento() + "\n");
+            salida.append(indice).append(" - ").append(aux.getElemento()).append("\n");
 
             aux = aux.getSiguiente();
             indice++;
