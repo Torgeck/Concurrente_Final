@@ -8,6 +8,9 @@ import java.util.Random;
 
 public class Cajero implements Runnable {
 
+    private static final int MAX_TIEMPO = 2;
+    private static final int SEGUNDO = 1;
+    private static final int SEG_MILLIS = 1000;
     private String idEmpleado;
     private Caja caja;
     private Random random;
@@ -43,7 +46,7 @@ public class Cajero implements Runnable {
                 if (hayClientes) {
                     System.out.println(Console.colorString("CYAN", "Cajero " + idEmpleado + " ATENDIENDO cliente"));
                     try {
-                        Thread.sleep((random.nextInt(2) + 1) * 1000);
+                        Thread.sleep((random.nextInt(MAX_TIEMPO) + SEGUNDO) * SEG_MILLIS);
                     } catch (Exception e) {
                         System.out.println(Console.colorString("RED", "ERROR CON CAJERO " + idEmpleado));
                     }
