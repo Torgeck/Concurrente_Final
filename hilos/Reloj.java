@@ -9,11 +9,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class Reloj implements Runnable {
     // FORMATO DE HORA 24-00
+    private static final int CIEN = 100;
+    private static final int HORA_APERTURA = 600;
+    private static final int HORA_CIERRE = 2200;
+    private static final int HORA_MAX = 24;
+    private static final int MINUTOS_MAX = 60;
+    private static final int INCREMENTO_MINUTOS = 15;
+    private static final int ESPERA_MILLIS = 3000;
     private final AtomicInteger dia;
     private final AtomicInteger horaActual;
     private final AtomicInteger minutoActual;
     private boolean aeropuertoCerrado;
-    private PriorityBlockingQueue<Alarma> alarms;
+    private PriorityBlockingQueue<Alarma> alarmas;
     private Aeropuerto aeropuerto;
     private final int diaFinal;
 
@@ -23,7 +30,7 @@ public class Reloj implements Runnable {
         this.horaActual = new AtomicInteger(6);
         this.minutoActual = new AtomicInteger(0);
         this.aeropuertoCerrado = false;
-        this.alarms = new PriorityBlockingQueue<>();
+        this.alarmas = new PriorityBlockingQueue<>();
     }
 
     public int getDiaActual() {
@@ -36,26 +43,26 @@ public class Reloj implements Runnable {
 
     public static int addMin(int hora, int min) {
         // Metodo que aniade minutos a la hora pasada por parametro
-        int horaAux = hora / 100;
-        int minAux = (hora % 100) + min;
+        int horaAux = hora / CIEN;
+        int minAux = (hora % CIEN) + min;
 
-        horaAux += minAux / 60;
-        minAux %= 60;
-        horaAux %= 24;
+        horaAux += minAux / MINUTOS_MAX;
+        minAux %= MINUTOS_MAX;
+        horaAux %= HORA_MAX;
 
-        return horaAux * 100 + minAux;
+        return horaAux * CIEN + minAux;
     }
 
     public void agregarAlarma(Alarma alarm) {
-        this.alarms.add(alarm);
+        this.alarmas.add(alarm);
     }
 
-    public synchronized void incrementarTiempo(int min) {
+    public void incrementarTiempo(int min) {
         // Aumenta el tiempo actual mas 15 min
-        if (horaActual.get() < 24) {
-            if (minutoActual.addAndGet(min) == 60) {
+        if (horaActual.get() < HORA_MAX) {
+            if (minutoActual.addAndGet(min) == MINUTOS_MAX) {
                 minutoActual.set(0);
-                if (horaActual.incrementAndGet() == 24) {
+                if (horaActual.incrementAndGet() == HORA_MAX) {
                     horaActual.set(0);
                     this.dia.incrementAndGet();
                     System.out.println(Console.colorString("BLUE", "DIA " + this.dia.get()));
@@ -65,7 +72,7 @@ public class Reloj implements Runnable {
     }
 
     public synchronized int getTiempoActual() {
-        return horaActual.get() * 100 + minutoActual.get();
+        return horaActual.get() * CIEN + minutoActual.get();
     }
 
     public static int convertirHora(int hora, int minutos) {
@@ -75,16 +82,16 @@ public class Reloj implements Runnable {
          */
         int minAux = minutos, horaAux = hora;
 
-        if (minAux >= 60) {
-            minAux = minutos % 60;
-            horaAux += (minutos / 60);
+        if (minAux >= MINUTOS_MAX) {
+            minAux = minutos % MINUTOS_MAX;
+            horaAux += (minutos / MINUTOS_MAX);
         }
 
-        if (horaAux > 24) {
-            horaAux = horaAux % 24;
+        if (horaAux > HORA_MAX) {
+            horaAux = horaAux % HORA_MAX;
         }
 
-        return horaAux * 100 + minAux;
+        return horaAux * CIEN + minAux;
     }
 
     public static int convertirHora(int hora) {
@@ -94,18 +101,18 @@ public class Reloj implements Runnable {
          */
         int horaAux = hora;
 
-        if (horaAux > 24) {
-            horaAux = horaAux % 24;
+        if (horaAux > HORA_MAX) {
+            horaAux = horaAux % HORA_MAX;
         }
 
-        return horaAux * 100;
+        return horaAux * CIEN;
     }
 
     private void checkAlarma() {
-        if (!this.alarms.isEmpty() && this.getTiempoActual() == alarms.peek().getTiempo()) {
+        if (!this.alarmas.isEmpty() && this.getTiempoActual() == alarmas.peek().getTiempo()) {
             // Avisa si el tiempo actual es el mismo o mayor que el tiempo de la alarma
             try {
-                alarms.poll().getPuestoEmbarque().sonarAlarma();
+                alarmas.poll().getPuestoEmbarque().sonarAlarma();
             } catch (Exception e) {
                 System.out.println(Console.colorString("RED", "ERROR al querer hacer signal en RELOJ"));
                 e.printStackTrace();
@@ -116,8 +123,8 @@ public class Reloj implements Runnable {
     public int getTiempoRestante(int horaEmbarque) {
         // Metodo que devuelve el tiempo restante en minutos con respecto al actual
         // En caso de que sea negativo retorna 0
-        int embarqueMinutos = ((horaEmbarque / 100) * 60) + (horaEmbarque % 100);
-        int actualMinutos = ((this.getTiempoActual() / 100) * 60) + (this.getTiempoActual() % 100);
+        int embarqueMinutos = ((horaEmbarque / CIEN) * MINUTOS_MAX) + (horaEmbarque % CIEN);
+        int actualMinutos = ((this.getTiempoActual() / CIEN) * MINUTOS_MAX) + (this.getTiempoActual() % CIEN);
 
         // Calcula la diferencia en minutos
         int diferenciaMinutos = embarqueMinutos - actualMinutos;
@@ -126,7 +133,7 @@ public class Reloj implements Runnable {
     }
 
     private void checkApertura() {
-        if (this.getTiempoActual() == 600) {
+        if (this.getTiempoActual() == HORA_APERTURA) {
             this.aeropuertoCerrado = false;
             this.aeropuerto.cambiarFlagCerrado(this.aeropuertoCerrado);
             this.aeropuerto.avisarApertura();
@@ -134,7 +141,7 @@ public class Reloj implements Runnable {
     }
 
     private void checkCierre() {
-        if (this.getTiempoActual() == 2200) {
+        if (this.getTiempoActual() == HORA_CIERRE) {
             this.aeropuertoCerrado = true;
             this.aeropuerto.cambiarFlagCerrado(this.aeropuertoCerrado);
             this.aeropuerto.cerrarAeropuerto();
@@ -145,9 +152,9 @@ public class Reloj implements Runnable {
         while (this.dia.get() <= this.diaFinal) {
             try {
                 System.out.println(Console.colorString("BLUE",
-                        String.format("Tiempo actual %02d:%02d", this.horaActual.get(), this.minutoActual.get())));
-                Thread.sleep(1000);
-                incrementarTiempo(15);
+                        String.format("⏰⏰ Tiempo actual %02d:%02d ⏰⏰", this.horaActual.get(), this.minutoActual.get())));
+                Thread.sleep(ESPERA_MILLIS);
+                incrementarTiempo(INCREMENTO_MINUTOS);
 
                 if (aeropuertoCerrado) {
                     checkApertura();
