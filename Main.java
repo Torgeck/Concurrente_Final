@@ -13,7 +13,7 @@ public class Main {
         int capacidadMax = 5;
         int cantCajas = 6;
         int cantPuestosEmbarque = 20;
-        int cantDiasSimulacion = 2;
+        int cantDiasSimulacion = 1;
         int capacidadTren = 10;
         int cantPasajeros = 20;
         int segundos = 20;
@@ -42,11 +42,12 @@ public class Main {
     }
 
     private static void inicializarEmpleadosTerminal(HashMap<Character, Terminal> terminales, Thread[] cajeros,
-            Thread[] empEmbarque, Aeropuerto ar) {
+                                                     Thread[] empEmbarque, Aeropuerto ar) {
         int indiceCajero = 0;
         int indiceEmpleado = 0;
+        int charCode = 65;
         for (int i = 0; i < 3; i++) {
-            char idTerminal = (char) (65 + i);
+            char idTerminal = (char) (charCode + i);
             Caja[] cajas = terminales.get(idTerminal).getFreeshop().getCajas();
 
             // Asocia cajeros con cajas
@@ -70,7 +71,7 @@ public class Main {
     }
 
     private static void inicializarEmpleadosPuestos(Thread[] empleados, HashMap<String, PuestoAtencion> puestos,
-            List<String> empresas) {
+                                                    List<String> empresas) {
         Empleado emp;
         PuestoAtencion puesto;
         for (int i = 0; i < empleados.length; i++) {
