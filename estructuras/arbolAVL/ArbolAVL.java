@@ -580,9 +580,7 @@ public class ArbolAVL {
 
         if (nodo != null) {
             // Armo una cadena con todos los datos del nodo
-            cadena.append(nodo.getKey() + "\t" +
-                    "HI:" + ((nodo.getIzquierdo() != null) ? nodo.getIzquierdo().getKey() : "-") + "\t" +
-                    "HD:" + ((nodo.getDerecho() != null) ? nodo.getDerecho().getKey() : "-") + "\n");
+            cadena.append(nodo.getKey()).append("\t").append("HI:").append((nodo.getIzquierdo() != null) ? nodo.getIzquierdo().getKey() : "-").append("\t").append("HD:").append((nodo.getDerecho() != null) ? nodo.getDerecho().getKey() : "-").append("\n");
 
             // Llamado recursivo
             toStringRecursivo(nodo.getIzquierdo(), cadena);
@@ -602,9 +600,7 @@ public class ArbolAVL {
     private void toKeyValueStringRecursivo(NodoAVL nodo, StringBuilder cadena) {
 
         if (nodo != null) {
-            cadena.append("\nKey: " + nodo.getKey() + "\tValue: " + nodo.getValue() + "\tAltura: " + nodo.getAltura()
-                    + "\n\t>> HI:" + ((nodo.getIzquierdo() != null) ? nodo.getIzquierdo().getKey() : "-") + "\n" +
-                    "\t>> HD:" + ((nodo.getDerecho() != null) ? nodo.getDerecho().getKey() : "-") + "\n");
+            cadena.append("\nKey: ").append(nodo.getKey()).append("\tValue: ").append(nodo.getValue()).append("\tAltura: ").append(nodo.getAltura()).append("\n\t>> HI:").append((nodo.getIzquierdo() != null) ? nodo.getIzquierdo().getKey() : "-").append("\n").append("\t>> HD:").append((nodo.getDerecho() != null) ? nodo.getDerecho().getKey() : "-").append("\n");
 
             toKeyValueStringRecursivo(nodo.getIzquierdo(), cadena);
             toKeyValueStringRecursivo(nodo.getDerecho(), cadena);
