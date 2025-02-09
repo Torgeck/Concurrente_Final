@@ -16,10 +16,10 @@ public class Terminal {
     private CyclicBarrier cierre;
 
     public Terminal(Aeropuerto aeropuerto, char idTerminal, int limiteInferior, int limiteSuperior, int cantCajas,
-            int capMax) {
+                    int capMax) {
         this.aeropuerto = aeropuerto;
         this.idTerminal = idTerminal;
-        this.mapPuestoEmbarques = new HashMap<Integer, PuestoEmbarque>();
+        this.mapPuestoEmbarques = new HashMap<>();
         this.arrayPuestosEmbarques = new ArrayList<>();
         this.random = new Random();
         this.freeshop = new Freeshop(idTerminal, cantCajas, capMax);
@@ -79,8 +79,11 @@ public class Terminal {
     }
 
     public void liberarEmpleadosEmbarque() {
-        this.mapPuestoEmbarques.forEach((k, puesto) -> {
-            puesto.liberarEmpleado();
-        });
+        this.mapPuestoEmbarques.forEach((k, puesto) -> puesto.liberarEmpleado());
+    }
+
+    public String toString() {
+        return Character.toString(this.idTerminal);
     }
 }
+
