@@ -7,6 +7,8 @@ import pasivos.Tren;
 
 public class Conductor implements Runnable {
 
+    private static final int SEG_MILLIS = 1000;
+    private static final int DEMORA = 1;
     private Tren tren;
     private Aeropuerto aeropuerto;
     private int tiempoViaje;
@@ -14,7 +16,7 @@ public class Conductor implements Runnable {
     public Conductor(Tren tren, Aeropuerto aeropuerto) {
         this.tren = tren;
         this.aeropuerto = aeropuerto;
-        this.tiempoViaje = 1000 * 1;
+        this.tiempoViaje = SEG_MILLIS * DEMORA;
     }
 
     public void run() {
@@ -38,7 +40,7 @@ public class Conductor implements Runnable {
                     tren.reset();
                 }
 
-                if (terminalActual >= 0) {
+                if (terminalActual == 0) {
                     while (terminalActual < 3) {
                         tren.irSiguienteTerminal();
                         try {
@@ -57,7 +59,6 @@ public class Conductor implements Runnable {
                         System.out.println(Console.colorString("RED", "ERROR al volver a aeropuerto"));
                     }
                 }
-
             }
         }
         System.out.println(Console.colorString("YELLOW",
