@@ -9,6 +9,9 @@ import pasivos.PuestoAtencion;
 public class Empleado implements Runnable {
 
     private static int ID = 0;
+    private static final int TIEMPO_MAX = 8;
+    private static final int TIEMPO_MIN = 1;
+    private static final int SEG_MILLIS = 1000;
     private int idEmpleado;
     private PuestoAtencion puesto;
     private Random random;
@@ -49,7 +52,6 @@ public class Empleado implements Runnable {
 
                 if (!this.aeropuerto.getFlagSimulacion()) {
                     this.aeropuerto.esperarApertura();
-                    this.puesto.abrirPuesto();
                     System.out.println("Empleado " + this.idEmpleado + " se dirige al puesto " + puesto.getIdPuesto());
                 }
 
@@ -57,7 +59,7 @@ public class Empleado implements Runnable {
 
                 if (this.puesto.atenderPasajero(this)) {
                     try {
-                        Thread.sleep((random.nextInt(8) + 1) * 1000);
+                        Thread.sleep((random.nextInt(TIEMPO_MAX) + TIEMPO_MIN) * SEG_MILLIS);
                     } catch (Exception e) {
                         System.out.println("ERROR exploto el empleado [" + this.idEmpleado + "]");
                     }
