@@ -7,6 +7,7 @@ import java.util.Random;
 
 public class CreadorPasajeros implements Runnable {
 
+    private static final int SEG_MILLIS = 1000;
     private Aeropuerto aeropuerto;
     private Reloj reloj;
     private int segundos;
@@ -14,7 +15,7 @@ public class CreadorPasajeros implements Runnable {
     private int cantDias;
 
     public CreadorPasajeros(int segundos, int cantPasajeros, int cantDias, Reloj reloj, Aeropuerto aeropuerto) {
-        this.segundos = segundos * 1000;
+        this.segundos = segundos * SEG_MILLIS;
         this.cantPasajeros = cantPasajeros;
         this.cantDias = cantDias;
         this.aeropuerto = aeropuerto;
