@@ -13,7 +13,12 @@ import hilos.Reloj;
 
 public class Aeropuerto {
 
-    private static final char[] arregloTerminales = { 'A', 'B', 'C' };
+    private static final char[] ARREGLO_TERMINALES = {'A', 'B', 'C'};
+    private static final int CANT_VUELOS = 24;
+    private static final int HORA_INICIAL = 10;
+    private static final int ESPACIO = 30;
+    private static final int CAP_MAXIMA = 15;
+    private static final int CANT_CAJAS = 2;
     private Reloj reloj;
     private PuestoInformes puestoInformes;
     private HashMap<String, PuestoAtencion> hashPuestoAtencion;
@@ -80,7 +85,7 @@ public class Aeropuerto {
         return this.reloj;
     }
 
-    public synchronized boolean getFlagSimulacion() {
+    public boolean getFlagSimulacion() {
         return this.flagFinSimulacion.get();
     }
 
@@ -91,38 +96,34 @@ public class Aeropuerto {
     public void generarPuestosAtencion(List<String> empresas, int capacidadMax) {
         PuestoAtencion puesto;
         for (String empresa : empresas) {
-            puesto = new PuestoAtencion(this, empresa, capacidadMax, this.guardia.getWalkie());
+            puesto = new PuestoAtencion(this, empresa, capacidadMax, this.hall);
             this.hashPuestoAtencion.put(empresa, puesto);
         }
     }
 
     public void generarTerminales() {
-        int capMax = 15;
-        int cantCajas = 2;
-        hashTerminal.put('A', new Terminal(this, 'A', 1, 7, cantCajas, capMax));
-        hashTerminal.put('B', new Terminal(this, 'B', 8, 15, cantCajas, capMax));
-        hashTerminal.put('C', new Terminal(this, 'C', 16, 20, cantCajas, capMax));
+        hashTerminal.put('A', new Terminal(this, 'A', 1, 7, CANT_CAJAS, CAP_MAXIMA));
+        hashTerminal.put('B', new Terminal(this, 'B', 8, 15, CANT_CAJAS, CAP_MAXIMA));
+        hashTerminal.put('C', new Terminal(this, 'C', 16, 20, CANT_CAJAS, CAP_MAXIMA));
     }
 
     public void generarVuelos() {
-        int hora = 10;
-        int espacio = 30;
+        int hora = HORA_INICIAL;
         int cantEmpresas = this.empresas.size();
-        int cantVuelos = 20;
         Random rand = new Random();
         Vuelo vuelo;
         String empresa;
         Terminal terminal;
         PuestoEmbarque puestoEmb;
-        hora = Reloj.convertirHora(hora, espacio);
+        hora = Reloj.convertirHora(hora, ESPACIO);
 
-        for (int i = 1; i <= cantVuelos; i++) {
+        for (int i = 1; i <= CANT_VUELOS; i++) {
             empresa = this.empresas.get(rand.nextInt(cantEmpresas));
             terminal = getTerminalRandom();
             puestoEmb = terminal.getPuestoRandom();
             vuelo = new Vuelo(empresa, terminal, puestoEmb, hora);
             agregarVuelo(vuelo, puestoEmb);
-            hora = Reloj.addMin(hora, espacio);
+            hora = Reloj.addMin(hora, ESPACIO);
         }
         System.out.println(Console.colorString("YELLOW", this.hashVuelos.toString()));
     }
@@ -150,8 +151,7 @@ public class Aeropuerto {
 
     public Terminal getTerminalRandom() {
         Random rand = new Random();
-        Terminal terminal = hashTerminal.get(arregloTerminales[rand.nextInt(3)]);
-        return terminal;
+        return hashTerminal.get(ARREGLO_TERMINALES[rand.nextInt(3)]);
     }
 
     public synchronized boolean estaCerradoAlPublico() {
@@ -185,9 +185,7 @@ public class Aeropuerto {
     private void nuevoDia() {
         inicializarHashVuelos();
         generarVuelos();
-        this.hashTerminal.forEach((k, terminal) -> {
-            terminal.nuevoDia();
-        });
+        this.hashTerminal.forEach((k, terminal) -> terminal.nuevoDia());
     }
 
     private void liberarConductor() {
@@ -206,9 +204,7 @@ public class Aeropuerto {
     }
 
     private void liberarEmpleadosEmbarque() {
-        this.hashTerminal.forEach((k, terminal) -> {
-            terminal.liberarEmpleadosEmbarque();
-        });
+        this.hashTerminal.forEach((k, terminal) -> terminal.liberarEmpleadosEmbarque());
     }
 
 }
