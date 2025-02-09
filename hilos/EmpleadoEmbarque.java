@@ -41,8 +41,8 @@ public class EmpleadoEmbarque implements Runnable {
                     System.out.println(Console.colorString("YELLOW",
                             "Empleado embarque " + this.idEmpleado + " crea recordatorio embarque del vuelo"));
                     puesto.ponerAlarma();
-                    System.out.println(Console.colorString("YELLOW", "Empleado embarque " + this.idEmpleado
-                            + " avisa a pasajeros para el embarque del vuelo: " + puesto.getVueloActual()));
+                    System.out.println(Console.colorString("YELLOW", "\uD83D\uDD0A\uD83D\uDD0A Empleado embarque " + this.idEmpleado
+                            + " avisa a pasajeros para el embarque del vuelo: " + puesto.getVueloActual() + "\uD83D\uDD0A\uD83D\uDD0A"));
                     puesto.avisarPasajerosEmbarque();
                 }
                 System.out.println(Console.colorString("YELLOW",
