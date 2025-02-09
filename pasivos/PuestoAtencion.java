@@ -18,7 +18,6 @@ public class PuestoAtencion {
     private static int ID = 0;
     private int idPuesto;
     private int MAX;
-    private boolean estaCerrado;
     private Aeropuerto aeropuerto;
     private String aerolinea;
     private ArbolAVL vuelosAerolinea;
@@ -27,20 +26,19 @@ public class PuestoAtencion {
     private Semaphore mutexEmpleado;
     private Semaphore mostrador;
     private Exchanger<Reserva> exchanger;
-    private WalkieTalkie walkie;
+    private Hall hall;
 
-    public PuestoAtencion(Aeropuerto aeropuerto, String aerolinea, int max, WalkieTalkie walkieGuardia) {
+    public PuestoAtencion(Aeropuerto aeropuerto, String aerolinea, int max, Hall hall) {
         this.aeropuerto = aeropuerto;
         this.aerolinea = aerolinea;
         this.MAX = max;
         this.idPuesto = generarID();
-        this.estaCerrado = false;
         this.exchanger = new Exchanger<>();
         this.colaDisponibilidad = new Semaphore(this.MAX, true);
         this.mostrador = new Semaphore(1, true);
         this.mutexEmpleado = new Semaphore(0);
         this.pasajeroListo = new Semaphore(0);
-        this.walkie = walkieGuardia;
+        this.hall = hall;
         iniVuelosAerolinea(aeropuerto.getHashVuelos().get(aerolinea));
     }
 
@@ -71,11 +69,6 @@ public class PuestoAtencion {
         }
     }
 
-    public void abrirPuesto() {
-        mutexEmpleado.drainPermits();
-        this.estaCerrado = false;
-    }
-
     // Metodos empleado
     public boolean atenderPasajero(Empleado empleado) {
         Vuelo vueloObtenido;
@@ -102,7 +95,6 @@ public class PuestoAtencion {
         } catch (Exception e) {
             System.out.println(Console.colorString("RED",
                     "ERROR con empleado al querer atender al pasajero " + this.idPuesto + e.getMessage()));
-            e.printStackTrace();
         }
         return hayPasajeros;
     }
@@ -138,25 +130,10 @@ public class PuestoAtencion {
         return this.colaDisponibilidad.availablePermits() < this.MAX;
     }
 
-    public void eliminarVuelosExpirados(long brechaTiempo) {
-        Lista listaExpirados;
-        Vuelo vuelo;
-
-        System.out.println(Console.colorString("WHITE", "Eliminando vuelos expirados"));
-        listaExpirados = vuelosAerolinea.listarRango(0, this.aeropuerto.getReloj().getTiempoActual() + brechaTiempo);
-
-        while (!listaExpirados.esVacia()) {
-            vuelo = (Vuelo) listaExpirados.recuperar(1);
-            vuelosAerolinea.eliminar(vuelo.getHoraEmbarque());
-            listaExpirados.eliminar(1);
-        }
-    }
-
     // Metodos pasajero
-    public synchronized boolean entrarCola(Pasajero pasajero) throws AeropuertoCerradoException {
+    public boolean entrarCola(Pasajero pasajero) throws AeropuertoCerradoException {
         boolean exito = true;
         this.aeropuerto.verificarAbierto();
-
         try {
             if (colaDisponibilidad.tryAcquire()) {
                 System.out
@@ -211,7 +188,7 @@ public class PuestoAtencion {
     // Metodos guardia
     public synchronized void hayLugarCola() {
         try {
-            walkie.notificarGuardia();
+            hall.notificarGuardia();
         } catch (Exception e) {
             System.out.println(Console.colorString("RED", "ERROR avisar lugar disponible a guardia"));
         }
